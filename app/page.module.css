@@ -3,3 +3,7 @@
 .storyBody { max-width: 420px; }
 .storyLink { padding-top: var(--spacing-12); }
 .newsPhoto { position: relative; flex: 1; min-height: 300px; }
+
+@media (max-width: 768px) {
+  .newsPhoto { min-height: 240px; }
+}

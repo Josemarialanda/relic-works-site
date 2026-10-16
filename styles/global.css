@@ -17,3 +17,9 @@ h1, h2, p { margin: 0; }
 .display { font-size: var(--text-display); font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; text-wrap: balance; }
 .poster { font-size: 138px; font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
 .link-u { font-size: var(--text-meta); text-transform: uppercase; text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .poster { font-size: 22vw; }
+  .display { font-size: 48px; }
+  .heading { font-size: 40px; }
+}

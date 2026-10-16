@@ -5,3 +5,9 @@
 .dots { position: absolute; right: var(--spacing-20); bottom: var(--spacing-24); z-index: 2; }
 .ctas { position: absolute; left: var(--spacing-20); bottom: 190px; display: flex; gap: var(--spacing-12); z-index: 2; }
 .poster { position: absolute; left: 16px; bottom: var(--spacing-12); }
+
+@media (max-width: 768px) {
+  .hero { height: 560px; }
+  .ctas { right: var(--spacing-20); bottom: 150px; flex-wrap: wrap; }
+  .poster { left: var(--spacing-12); }
+}

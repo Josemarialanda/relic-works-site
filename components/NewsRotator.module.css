@@ -1,3 +1,7 @@
 .news { display: flex; flex-direction: column; gap: var(--spacing-12); min-height: 460px; padding: var(--spacing-40) var(--spacing-20) var(--spacing-24); border-right: var(--rule); }
 .body { max-width: 480px; }
 .dots { margin-top: auto; padding-top: var(--spacing-24); }
+
+@media (max-width: 768px) {
+  .news { border-right: none; border-bottom: var(--rule); min-height: 360px; }
+}

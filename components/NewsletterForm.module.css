@@ -3,3 +3,7 @@
 /* DS Input: ash border, black on focus, no ring. */
 .input { flex: 1; min-width: 0; height: 60px; padding: 0 var(--input-pad); border: 1px solid var(--border-input); border-radius: var(--radius-inputs); font-family: inherit; font-size: var(--text-body); color: var(--text-primary); background: var(--color-paper-white); outline: none; }
 .input:focus { border-color: var(--border-input-focus); }
+
+@media (max-width: 768px) {
+  .form { padding: var(--spacing-24) var(--spacing-20); }
+}

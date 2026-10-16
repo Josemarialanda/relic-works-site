@@ -9,3 +9,9 @@
 .notice { display: flex; gap: var(--spacing-20); align-items: baseline; padding: var(--spacing-20); background: var(--color-bone); }
 .noticeLabel { white-space: nowrap; }
 .pledge { line-height: 1.1; max-width: 760px; text-wrap: pretty; }
+
+@media (max-width: 768px) {
+  .defRows { grid-template-columns: minmax(0, 1fr); }
+  .defRows > :nth-child(odd) { padding-bottom: 0; border-bottom: none; }
+  .notice { flex-direction: column; gap: var(--spacing-4); }
+}

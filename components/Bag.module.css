@@ -16,3 +16,9 @@
 .summaryHead { padding: var(--spacing-24) var(--spacing-20); }
 .totalLabel { font-weight: var(--font-weight-bold); }
 .leadTime { line-height: 1.5; }
+
+@media (max-width: 768px) {
+  .bag { grid-template-columns: minmax(0, 1fr); }
+  .item { grid-template-columns: 96px minmax(0, 1fr); }
+  .item > :last-child { grid-column: 1 / -1; }
+}

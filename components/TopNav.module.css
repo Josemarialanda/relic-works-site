@@ -2,3 +2,9 @@
 .brand { font-size: var(--text-body); font-weight: var(--font-weight-bold); letter-spacing: -0.01em; }
 .links { display: flex; gap: var(--spacing-20); flex: 1; }
 .link[aria-current="page"] { font-weight: var(--font-weight-bold); text-decoration: underline; text-underline-offset: 4px; }
+
+@media (max-width: 768px) {
+  .nav { flex-wrap: wrap; height: auto; gap: var(--spacing-12) var(--spacing-20); padding: var(--spacing-12) var(--spacing-20); }
+  .brand { flex: 1; }
+  .links { order: 3; flex: 0 0 100%; gap: var(--spacing-12) var(--spacing-20); flex-wrap: wrap; }
+}

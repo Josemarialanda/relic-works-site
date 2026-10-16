@@ -6,3 +6,9 @@
 .lightbox .zoomed { width: auto; height: auto; min-width: 320px; min-height: 240px; }
 .caption { position: absolute; left: var(--spacing-20); bottom: var(--spacing-20); color: var(--color-paper-white); }
 .close { position: absolute; top: var(--spacing-12); right: var(--spacing-20); background: none; border: none; color: var(--color-paper-white); font-size: var(--text-subheading); cursor: pointer; }
+
+@media (max-width: 768px) {
+  .collage { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 160px; }
+  /* Tile spans are inline styles, so !important is needed to reset them. */
+  .tile { grid-column: auto !important; grid-row: auto !important; }
+}

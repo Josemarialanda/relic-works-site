@@ -2,3 +2,8 @@
 .wordmark { text-transform: none; }
 .column { display: flex; flex-direction: column; gap: 8px; }
 .column a:first-child { font-weight: var(--font-weight-bold); }
+
+@media (max-width: 768px) {
+  .footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wordmark { grid-column: 1 / -1; }
+}

@@ -11,3 +11,8 @@
 .cta { padding: var(--spacing-60) var(--spacing-20); }
 .ctaBody { padding: var(--spacing-60) var(--spacing-40); justify-content: flex-end; }
 .ctaButtons { display: flex; gap: var(--spacing-12); }
+
+@media (max-width: 768px) {
+  .hero { height: 420px; }
+  .story, .ctaBody { padding: var(--spacing-24) var(--spacing-20); }
+}
