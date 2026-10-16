@@ -122,7 +122,7 @@ export function Shop() {
               <span className="heading">{g.name}</span>
               <span className="meta">{g.items.length} products</span>
             </div>
-            <div className={cx(layout.grid3, styles.products)}>
+            <div className={styles.products}>
               {g.items.map((p) => (
                 <div key={p.name} className={cx(layout.stack, layout.gap12)}>
                   <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} />

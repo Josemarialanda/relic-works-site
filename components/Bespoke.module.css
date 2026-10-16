@@ -20,7 +20,14 @@
 .custom { display: flex; align-items: center; gap: 8px; }
 .customInput { width: 120px; height: 44px; padding: 0 var(--input-pad); border: var(--rule); border-radius: var(--radius-inputs); font-family: inherit; font-size: var(--text-body); background: var(--color-paper-white); outline: none; }
 
-@media (max-width: 768px) {
-  .photo { position: static; height: 320px; }
+/* Tablet */
+@media (max-width: 1023px) {
+  .photo { height: 560px; }
+  .options { padding: var(--spacing-24); }
+}
+
+/* Phone */
+@media (max-width: 767px) {
+  .photo { position: relative; height: 320px; }
   .options { padding: var(--spacing-24) var(--spacing-20); }
 }

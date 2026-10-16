@@ -1,0 +1,11 @@
+/* Responsive breakpoints. CSS custom properties cannot be used inside @media,
+   so each *.module.css file repeats these literal values. Keep them in sync.
+
+   Widescreen   min-width: 1600px
+   Desktop      the default styles, no media query
+   Tablet       max-width: 1023px   (includes phones)
+   Phone        max-width: 767px
+
+   Write each file base-first, then Tablet, then Phone, then Widescreen. */
+:root { --page-max: 1280px; }
+@media (min-width: 1600px) { :root { --page-max: 1600px; } }

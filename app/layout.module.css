@@ -1,1 +1,1 @@
-.page { max-width: 1280px; margin: 0 auto; background: var(--surface-page-canvas); color: var(--text-primary); }
+.page { max-width: var(--page-max); margin: 0 auto; background: var(--surface-page-canvas); color: var(--text-primary); }

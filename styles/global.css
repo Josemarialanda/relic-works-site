@@ -15,11 +15,22 @@ h1, h2, p { margin: 0; }
 .subheading { font-size: var(--text-subheading); font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; }
 .heading { font-size: var(--text-heading); font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; }
 .display { font-size: var(--text-display); font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; text-wrap: balance; }
-.poster { font-size: 138px; font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+.poster { font-size: min(138px, 14vw); font-weight: var(--font-weight-bold); line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
 .link-u { font-size: var(--text-meta); text-transform: uppercase; text-decoration: underline; }
 
-@media (max-width: 768px) {
-  .poster { font-size: 22vw; }
-  .display { font-size: 48px; }
+/* Tablet */
+@media (max-width: 1023px) {
+  .heading { font-size: 48px; }
+  .display { font-size: 64px; }
+}
+
+/* Phone */
+@media (max-width: 767px) {
   .heading { font-size: 40px; }
+  .display { font-size: 48px; }
+}
+
+/* Widescreen */
+@media (min-width: 1600px) {
+  .poster { font-size: 180px; }
 }

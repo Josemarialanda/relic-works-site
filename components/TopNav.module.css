@@ -3,8 +3,9 @@
 .links { display: flex; gap: var(--spacing-20); flex: 1; }
 .link[aria-current="page"] { font-weight: var(--font-weight-bold); text-decoration: underline; text-underline-offset: 4px; }
 
-@media (max-width: 768px) {
+/* Phone: brand and bag on the first row, links on the second. */
+@media (max-width: 767px) {
   .nav { flex-wrap: wrap; height: auto; gap: var(--spacing-12) var(--spacing-20); padding: var(--spacing-12) var(--spacing-20); }
   .brand { flex: 1; }
-  .links { order: 3; flex: 0 0 100%; gap: var(--spacing-12) var(--spacing-20); flex-wrap: wrap; }
+  .links { order: 3; flex: 0 0 100%; flex-wrap: wrap; gap: var(--spacing-12) var(--spacing-20); }
 }

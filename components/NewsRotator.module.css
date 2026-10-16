@@ -2,6 +2,7 @@
 .body { max-width: 480px; }
 .dots { margin-top: auto; padding-top: var(--spacing-24); }
 
-@media (max-width: 768px) {
-  .news { border-right: none; border-bottom: var(--rule); min-height: 360px; }
+/* Phone */
+@media (max-width: 767px) {
+  .news { min-height: 360px; border-right: none; border-bottom: var(--rule); }
 }

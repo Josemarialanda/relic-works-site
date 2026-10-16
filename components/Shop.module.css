@@ -9,5 +9,15 @@
 .sort { background: none; border: none; padding: 0; cursor: pointer; }
 .sort[aria-pressed="true"] { font-weight: var(--font-weight-bold); text-decoration: underline; }
 
-.products { gap: var(--spacing-20); padding: var(--spacing-20); }
+.products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-20); padding: var(--spacing-20); }
 .empty { padding: var(--spacing-80) var(--spacing-20); align-items: flex-start; }
+
+/* Tablet */
+@media (max-width: 1023px) {
+  .products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Phone */
+@media (max-width: 767px) {
+  .products { grid-template-columns: minmax(0, 1fr); }
+}

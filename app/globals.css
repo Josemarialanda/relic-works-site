@@ -3,6 +3,7 @@
 @import "../styles/tokens/typography.css";
 @import "../styles/tokens/spacing.css";
 @import "../styles/tokens/base.css";
+@import "../styles/tokens/breakpoints.css";
 @import "../styles/global.css";
 
 /* next/font loads Inter and sets --font-inter-next on <html>. */

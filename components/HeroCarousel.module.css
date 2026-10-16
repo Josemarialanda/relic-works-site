@@ -6,8 +6,19 @@
 .ctas { position: absolute; left: var(--spacing-20); bottom: 190px; display: flex; gap: var(--spacing-12); z-index: 2; }
 .poster { position: absolute; left: 16px; bottom: var(--spacing-12); }
 
-@media (max-width: 768px) {
+/* Tablet */
+@media (max-width: 1023px) {
+  .hero { height: 640px; }
+}
+
+/* Phone */
+@media (max-width: 767px) {
   .hero { height: 560px; }
   .ctas { right: var(--spacing-20); bottom: 150px; flex-wrap: wrap; }
   .poster { left: var(--spacing-12); }
+}
+
+/* Widescreen */
+@media (min-width: 1600px) {
+  .hero { height: 800px; }
 }

@@ -25,10 +25,15 @@
 .ratio43 { aspect-ratio: 4 / 3; overflow: hidden; }
 .ratio11 { aspect-ratio: 1 / 1; overflow: hidden; }
 
-/* Mobile: stack the multi-column grids and drop the dividers between the stacked cells. */
-@media (max-width: 768px) {
+/* Tablet */
+@media (max-width: 1023px) {
+  .withSidebar { grid-template-columns: 200px minmax(0, 1fr); }
+  .story { padding: var(--spacing-24) var(--spacing-20); }
+}
+
+/* Phone: stack the multi-column grids and turn the vertical dividers into horizontal ones. */
+@media (max-width: 767px) {
   .grid2, .grid3, .split57, .split75, .withSidebar { grid-template-columns: minmax(0, 1fr); }
   .grid2 > .ruleR, .grid3 > .ruleR, .split57 > .ruleR, .split75 > .ruleR, .withSidebar > .ruleR { border-right: none; border-bottom: var(--rule); }
   .sticky { position: static; }
-  .story { padding: var(--spacing-24) var(--spacing-20); }
 }
