@@ -1,0 +1,18 @@
+.bag { display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+
+.item { display: grid; grid-template-columns: 160px minmax(0, 1fr) auto; gap: var(--spacing-20); padding: var(--spacing-20); }
+.itemName { font-weight: var(--font-weight-bold); }
+.itemSpec { line-height: 1.5; }
+.itemActions { display: flex; align-items: center; gap: var(--spacing-20); margin-top: auto; }
+
+/* Quantity stepper */
+.qty { display: flex; align-items: stretch; height: 36px; border: var(--rule); }
+.qty button { width: 36px; background: var(--color-paper-white); border: none; font-size: var(--text-body); cursor: pointer; }
+.qtyValue { display: flex; align-items: center; justify-content: center; width: 36px; border-left: var(--rule); border-right: var(--rule); }
+
+.empty { padding: var(--spacing-80) var(--spacing-20); align-items: flex-start; }
+.emptyActions { display: flex; gap: var(--spacing-12); }
+
+.summaryHead { padding: var(--spacing-24) var(--spacing-20); }
+.totalLabel { font-weight: var(--font-weight-bold); }
+.leadTime { line-height: 1.5; }

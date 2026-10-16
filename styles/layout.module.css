@@ -1,0 +1,26 @@
+/* Shared layout primitives for the hairline-grid layout. */
+.stack { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; }
+.between { display: flex; justify-content: space-between; align-items: baseline; gap: var(--spacing-20); }
+.gap4 { gap: var(--spacing-4); }
+.gap8 { gap: 8px; }
+.gap12 { gap: var(--spacing-12); }
+.gap20 { gap: var(--spacing-20); }
+.gap36 { gap: var(--spacing-36); }
+
+.ruleB { border-bottom: var(--rule); }
+.ruleR { border-right: var(--rule); }
+.ruleT { border-top: var(--rule); }
+
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.split57 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.split75 { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.withSidebar { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
+.sticky { position: sticky; top: 0; }
+
+.cell { padding: var(--card-padding); }
+.cellWide { padding: var(--spacing-24) var(--spacing-20); }
+.sectionHead { display: flex; justify-content: space-between; align-items: baseline; padding: var(--spacing-24) var(--spacing-20); border-bottom: var(--rule); }
+.ratio43 { aspect-ratio: 4 / 3; overflow: hidden; }
+.ratio11 { aspect-ratio: 1 / 1; overflow: hidden; }

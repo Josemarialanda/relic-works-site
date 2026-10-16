@@ -1,0 +1,11 @@
+.contact { padding: var(--spacing-24) var(--spacing-20); }
+.email { text-decoration: underline; }
+
+/* Term and definition rows with ash separators. */
+.defRows { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.defRows > * { padding: var(--spacing-20); border-bottom: 1px solid var(--color-ash); }
+.defRows > :nth-last-child(-n + 2) { border-bottom: none; }
+
+.notice { display: flex; gap: var(--spacing-20); align-items: baseline; padding: var(--spacing-20); background: var(--color-bone); }
+.noticeLabel { white-space: nowrap; }
+.pledge { line-height: 1.1; max-width: 760px; text-wrap: pretty; }

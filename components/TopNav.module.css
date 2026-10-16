@@ -1,0 +1,4 @@
+.nav { display: flex; align-items: center; gap: var(--spacing-36); height: var(--nav-height); padding: 0 var(--spacing-20); border-bottom: var(--rule); }
+.brand { font-size: var(--text-body); font-weight: var(--font-weight-bold); letter-spacing: -0.01em; }
+.links { display: flex; gap: var(--spacing-20); flex: 1; }
+.link[aria-current="page"] { font-weight: var(--font-weight-bold); text-decoration: underline; text-underline-offset: 4px; }

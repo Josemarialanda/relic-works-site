@@ -1,0 +1,16 @@
+:root{
+--font-inter:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+--font-helvetica:'Helvetica','Helvetica Neue',Arial,sans-serif;
+--font-sans:var(--font-inter);
+--font-form:var(--font-helvetica);
+--font-weight-light:300;
+--font-weight-regular:400;
+--font-weight-bold:700;
+--text-caption:10px;--leading-caption:1.2;--tracking-caption:0.1px;
+--text-meta:12px;--leading-meta:1.2;--tracking-meta:0.01em;
+--text-body:16px;--leading-body:1.4;--tracking-body:-0.16px;
+--text-subheading:32px;--leading-subheading:1;--tracking-subheading:-0.32px;
+--text-heading:56px;--leading-heading:1;--tracking-heading:-0.56px;
+--text-display:80px;--leading-display:1;--tracking-display:-0.8px;
+--text-form-sm:13px;--text-form-lg:30px;--leading-form:1.54;--tracking-form:0.006em;
+}

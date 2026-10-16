@@ -1,0 +1,12 @@
+:root{
+--spacing-unit:4px;
+--spacing-4:4px;--spacing-12:12px;--spacing-20:20px;--spacing-24:24px;--spacing-36:36px;--spacing-40:40px;--spacing-60:60px;--spacing-80:80px;--spacing-180:180px;
+--section-gap:80px;--section-gap-sm:60px;
+--card-padding:20px;--element-gap:20px;--modal-padding:40px;
+--nav-height:60px;
+--button-pad-y:20px;--button-pad-x:67px;
+--input-pad:12px;
+--radius-cards:0px;--radius-badges:0px;--radius-inputs:0px;--radius-buttons:0px;
+--hairline:1px;
+--shadow-none:none;
+}

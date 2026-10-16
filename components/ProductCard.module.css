@@ -1,0 +1,5 @@
+/* DS ProductCard: bone tile, image fills the width, name 700, price 400. */
+.card { display: flex; flex-direction: column; background: var(--surface-card-surface); }
+.card .image { aspect-ratio: 1 / 1; height: auto; }
+.body { display: flex; flex-direction: column; gap: var(--spacing-4); padding: var(--card-padding); }
+.name { font-weight: var(--font-weight-bold); }

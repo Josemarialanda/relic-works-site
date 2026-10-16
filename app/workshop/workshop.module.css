@@ -1,0 +1,13 @@
+.hero { position: relative; height: 640px; overflow: hidden; border-bottom: var(--rule); }
+.heroKicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); }
+.heroPoster { position: absolute; left: 16px; bottom: var(--spacing-12); }
+.storyLabel { padding: var(--spacing-40) var(--spacing-20); }
+.story { padding: var(--spacing-40); }
+.storyHeading { text-wrap: balance; }
+.storyBody { line-height: 1.5; max-width: 620px; }
+.noteList { padding: var(--spacing-40) var(--spacing-20); }
+.noteRow { padding: 16px 0; }
+.noteText { text-align: right; }
+.cta { padding: var(--spacing-60) var(--spacing-20); }
+.ctaBody { padding: var(--spacing-60) var(--spacing-40); justify-content: flex-end; }
+.ctaButtons { display: flex; gap: var(--spacing-12); }

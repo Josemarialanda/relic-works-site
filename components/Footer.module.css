@@ -1,0 +1,4 @@
+.footer { display: grid; grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); gap: var(--spacing-20); padding: var(--spacing-40) var(--spacing-20); background: var(--surface-inverted-surface); color: var(--text-inverted); font-size: var(--text-meta); text-transform: uppercase; }
+.wordmark { text-transform: none; }
+.column { display: flex; flex-direction: column; gap: 8px; }
+.column a:first-child { font-weight: var(--font-weight-bold); }

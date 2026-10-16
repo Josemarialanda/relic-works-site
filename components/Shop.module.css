@@ -1,0 +1,13 @@
+.filterGroup { padding: var(--spacing-24) var(--spacing-20); }
+.option { display: flex; align-items: center; gap: var(--spacing-12); width: 100%; padding: var(--spacing-4) 0; background: none; border: none; font-size: var(--text-body); text-align: left; cursor: pointer; }
+.box { width: 12px; height: 12px; flex-shrink: 0; border: 1px solid currentColor; }
+.option[aria-pressed="true"] .box { background: var(--color-ink-black); }
+.optionLabel { flex: 1; }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; height: var(--nav-height); padding: 0 var(--spacing-20); }
+.sorts { display: flex; gap: var(--spacing-12); align-items: center; }
+.sort { background: none; border: none; padding: 0; cursor: pointer; }
+.sort[aria-pressed="true"] { font-weight: var(--font-weight-bold); text-decoration: underline; }
+
+.products { gap: var(--spacing-20); padding: var(--spacing-20); }
+.empty { padding: var(--spacing-80) var(--spacing-20); align-items: flex-start; }

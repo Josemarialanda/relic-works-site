@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Nix
+result
+result-*
+.direnv/
+
+# Local environment files (can contain secrets)
+.env*
+!.env.example
+!.envrc
+
+# Logs
+npm-debug.log*
+
+# Editor and OS files
+.DS_Store
+.vscode/
+.idea/
+.vercel

@@ -1,0 +1,21 @@
+.tabs { display: flex; align-items: stretch; gap: var(--spacing-24); height: 48px; padding: 0 var(--spacing-20); }
+.tabsLabel { display: flex; align-items: center; padding-right: var(--spacing-24); font-weight: var(--font-weight-bold); }
+.tab { background: none; border: none; padding: 0; cursor: pointer; text-underline-offset: 4px; }
+.tab[aria-pressed="true"] { font-weight: var(--font-weight-bold); text-decoration: underline; }
+
+.photo { position: sticky; top: 0; align-self: start; height: 760px; overflow: hidden; }
+.options { padding: var(--spacing-40); }
+.lockNote { font-weight: var(--font-weight-regular); }
+
+/* Option chips: outlined, black when picked, ash when locked. */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: var(--spacing-12) 16px; background: var(--color-paper-white); color: var(--color-ink-black); border: var(--rule); font-size: var(--text-meta); text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--color-ink-black); color: var(--color-paper-white); }
+.chip:disabled { background: var(--color-paper-white); color: var(--color-ash); border-color: var(--color-ash); cursor: not-allowed; }
+
+.swatches { display: flex; gap: var(--spacing-12); align-items: center; padding-top: 8px; }
+.swatch { width: 36px; height: 36px; padding: 0; border: none; border-radius: 50%; outline: 1px solid transparent; outline-offset: 3px; cursor: pointer; }
+.swatch[aria-pressed="true"] { outline-color: var(--color-ink-black); }
+
+.custom { display: flex; align-items: center; gap: 8px; }
+.customInput { width: 120px; height: 44px; padding: 0 var(--input-pad); border: var(--rule); border-radius: var(--radius-inputs); font-family: inherit; font-size: var(--text-body); background: var(--color-paper-white); outline: none; }
