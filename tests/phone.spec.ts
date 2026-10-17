@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
+import { forcePseudoState, heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
 
 const MIN_TARGET = 44;
 
@@ -197,5 +197,41 @@ test.describe("collage lightbox", () => {
     await swipe(page, { x: 180, y: 200 }, { x: 180, y: 450 });
     await expect(close).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
+  });
+});
+
+test.describe("filled buttons and footer links on touch", () => {
+  const WHITE = "rgb(255, 255, 255)";
+
+  // The page has the touch media (pointer: coarse, hover: none). The test forces the states,
+  // because emulated touches do not set them. A real touch browser sets both: :active while the
+  // finger is down, and a "sticky" :hover after the tap.
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+  });
+
+  test("the hero CTA keeps white text on a black background when pressed", async ({ page }) => {
+    await forcePseudoState(page, "section a", ["hover", "active"]);
+    const cta = page.locator("section a").first();
+    await expect(cta).toHaveCSS("color", WHITE);
+    await expect(cta).toHaveCSS("background-color", "rgb(0, 0, 0)");
+    await expect(cta).toHaveCSS("opacity", "1");
+  });
+
+  test("the hero CTA keeps white text with the hover state after a tap", async ({ page }) => {
+    await forcePseudoState(page, "section a", ["hover"]);
+    await expect(page.locator("section a").first()).toHaveCSS("color", WHITE);
+  });
+
+  test("the outline CTA keeps black text when pressed", async ({ page }) => {
+    await forcePseudoState(page, "section a + a", ["hover", "active"]);
+    await expect(page.locator("section a + a").first()).toHaveCSS("color", "rgb(0, 0, 0)");
+  });
+
+  test("a footer link keeps its colour after a tap", async ({ page }) => {
+    const link = page.locator("footer a").first();
+    const before = await link.evaluate((e) => getComputedStyle(e).color);
+    await forcePseudoState(page, "footer a", ["hover"]);
+    await expect(link).toHaveCSS("color", before);
   });
 });

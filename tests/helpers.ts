@@ -46,3 +46,14 @@ export const heroDots = (page: Page) => page.locator("section").first().locator(
 export async function heroSlide(page: Page) {
   return heroDots(page).evaluateAll((els) => els.findIndex((e) => e.className.includes("on")));
 }
+
+// Force :hover and :active on the first element that matches the selector. Emulated touches in
+// headless Chromium do not set these states, so a test of the touch styles must force them.
+export async function forcePseudoState(page: Page, selector: string, states: ("hover" | "active")[]) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("DOM.enable");
+  await cdp.send("CSS.enable");
+  const { root } = await cdp.send("DOM.getDocument");
+  const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector });
+  await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: states });
+}

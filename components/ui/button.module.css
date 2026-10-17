@@ -3,11 +3,15 @@
 @media (hover: hover) {
   .button:hover { text-decoration: underline; }
 }
+/* A link button must keep its colours on hover (a:hover in global.css sets the colour to inherit).
+   A press does not change the colour either, so it shrinks by 2% and keeps full opacity. */
+.button:hover { color: var(--color-paper-white); }
+.button:active:not(:disabled) { opacity: 1; transform: scale(0.98); }
 .button:disabled { background: var(--color-ash); border-color: var(--color-ash); color: var(--text-secondary); cursor: not-allowed; }
 .compact { padding: 0 var(--spacing-36); }
 .small { height: 40px; padding: 0 var(--spacing-20); }
 .block { width: 100%; }
-.outline { background: var(--color-paper-white); color: var(--color-ink-black); padding: 0 var(--spacing-36); }
+.outline, .outline:hover { background: var(--color-paper-white); color: var(--color-ink-black); padding: 0 var(--spacing-36); }
 
 /* Text-only action, for example "Remove" or "Clear all filters". */
 .text { background: none; border: none; padding: 0; font-size: var(--text-meta); text-transform: uppercase; text-decoration: underline; cursor: pointer; }

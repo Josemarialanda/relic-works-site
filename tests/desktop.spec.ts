@@ -58,3 +58,45 @@ test.describe("shop filters", () => {
       .toBe(0);
   });
 });
+
+test.describe("filled buttons and footer links", () => {
+  const WHITE = "rgb(255, 255, 255)";
+
+  test("the hero CTA keeps white text on a black background on hover and while pressed", async ({ page }) => {
+    await page.goto("/");
+    const cta = page.locator("section").first().locator("a").first();
+    await expect(cta).toHaveCSS("color", WHITE);
+
+    await cta.hover();
+    await expect(cta).toHaveCSS("color", WHITE);
+    await expect(cta).toHaveCSS("background-color", "rgb(0, 0, 0)");
+
+    // The design system has no colour change, so a press must not make the button gray.
+    await page.mouse.down();
+    await expect(cta).toHaveCSS("color", WHITE);
+    await expect(cta).toHaveCSS("opacity", "1");
+    await page.mouse.up();
+  });
+
+  test("the outline CTA keeps black text on hover", async ({ page }) => {
+    await page.goto("/");
+    const cta = page.locator("section").first().locator("a").nth(1);
+    await cta.hover();
+    await expect(cta).toHaveCSS("color", "rgb(0, 0, 0)");
+  });
+
+  test("a footer link keeps its colour on hover", async ({ page }) => {
+    await page.goto("/");
+    const link = page.locator("footer a").first();
+    const before = await link.evaluate((e) => getComputedStyle(e).color);
+    await link.hover();
+    await expect(link).toHaveCSS("color", before);
+  });
+
+  test("a shop button keeps white text on hover", async ({ page }) => {
+    await page.goto("/shop");
+    const add = page.getByRole("button", { name: "Add to bag" }).first();
+    await add.hover();
+    await expect(add).toHaveCSS("color", WHITE);
+  });
+});

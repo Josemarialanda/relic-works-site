@@ -2,6 +2,8 @@
    Component styles live in *.module.css files next to each component. */
 
 a { color: inherit; text-decoration: none; }
+/* base.css sets a:hover to the primary text colour, which is black on the black footer. */
+a:hover { color: inherit; }
 button { font-family: inherit; color: inherit; }
 
 /* Hover only for a mouse. On a touchscreen the hover state stays after a tap. */
