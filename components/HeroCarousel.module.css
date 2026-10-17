@@ -12,10 +12,12 @@
   .hero { height: 640px; }
 }
 
-/* Phone */
+/* Phone: the poster is almost full width, so the dots go above it, not next to it.
+   The poster is 14vw high (the .poster text role), so the dots and CTAs use 14vw too. */
 @media (max-width: 767px) {
   .hero { height: 560px; }
-  .ctas { right: var(--spacing-20); bottom: 150px; flex-wrap: wrap; }
+  .dots { bottom: calc(var(--spacing-12) + 14vw + var(--spacing-24)); }
+  .ctas { right: var(--spacing-20); bottom: calc(14vw + 100px); flex-wrap: wrap; }
   .poster { left: var(--spacing-12); }
 }
 

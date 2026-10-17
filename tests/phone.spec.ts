@@ -72,6 +72,31 @@ test.describe("hero carousel", () => {
   });
 });
 
+test.describe("hero layout", () => {
+  type Box = { x: number; y: number; width: number; height: number };
+  const overlaps = (a: Box, b: Box) =>
+    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+  // From a small phone to the widest phone layout.
+  for (const width of [320, 375, 393, 430, 767]) {
+    test(`at ${width}px, the dots and their tap areas do not cover the poster or the CTAs`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      const hero = page.locator("section").first();
+      const poster = (await hero.locator(".poster").boundingBox())!;
+      const ctas = await Promise.all((await hero.locator("a").all()).map(async (a) => (await a.boundingBox())!));
+      for (const dot of await heroDots(page).all()) {
+        const d = (await dot.boundingBox())!;
+        // The ::after of each dot gives a 44px tap area around the 10px dot.
+        const tap = { x: d.x - 17, y: d.y - 17, width: d.width + 34, height: d.height + 34 };
+        expect(overlaps(d, poster), "dot over the poster").toBe(false);
+        expect(overlaps(tap, poster), "dot tap area over the poster").toBe(false);
+        for (const cta of ctas) expect(overlaps(tap, cta), "dot tap area over a CTA").toBe(false);
+      }
+    });
+  }
+});
+
 test.describe("tap targets", () => {
   test("nav links", async ({ page }) => {
     await page.goto("/");
