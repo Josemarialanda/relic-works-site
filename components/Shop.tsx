@@ -114,7 +114,7 @@ export function Shop() {
 
       <main className={layout.stack}>
         <div className={cx("meta", layout.ruleB, styles.toolbar)}>
-          <span>{list.length} products</span>
+          <span className={styles.count}>{list.length} products</span>
           <div className={styles.sorts}>
             <span className="muted">Sort</span>
             {SORTS.map((s) => (

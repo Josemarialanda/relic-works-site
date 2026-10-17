@@ -26,6 +26,8 @@
   .filtersOpen { border-top: var(--rule); }
   .filtersClosed { display: none; }
   .toolbar { flex-wrap: wrap; height: auto; min-height: var(--nav-height); gap: 0 var(--spacing-12); }
+  /* The toolbar wraps to two rows. Each row is 44px high with the text in the middle, so the count does not touch the top rule. */
+  .count, .sorts { display: flex; align-items: center; min-height: 44px; }
 }
 
 /* Touch */

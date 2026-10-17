@@ -160,6 +160,23 @@ test.describe("shop filters", () => {
     await expectTapTargets(page.getByRole("button", { name: "Add to bag" }));
   });
 
+  test("the toolbar has the same space above the product count as below the sort buttons", async ({ page }) => {
+    const space = await page.locator("main > div").first().evaluate((toolbar) => {
+      // Measure the text, not the elements, because the space can come from the element height.
+      const textBox = (el: Element) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        return range.getBoundingClientRect();
+      };
+      const box = toolbar.getBoundingClientRect();
+      const count = textBox(toolbar.querySelector("span")!);
+      const sort = textBox(toolbar.querySelector("button[aria-pressed]")!);
+      return { above: Math.round(count.top - box.top), below: Math.round(box.bottom - sort.bottom) };
+    });
+    expect(space.above).toBeGreaterThanOrEqual(12);
+    expect(Math.abs(space.above - space.below), JSON.stringify(space)).toBeLessThanOrEqual(4);
+  });
+
   test("the page does not scroll sideways", async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   });
