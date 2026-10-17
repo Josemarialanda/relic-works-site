@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { cx } from "@/lib/cx";
+import { useSwipe } from "@/lib/useSwipe";
 import styles from "./NewsRotator.module.css";
 import dots from "./ui/dots.module.css";
 
@@ -16,15 +17,27 @@ export function NewsRotator() {
   const [cur, setCur] = useState(0);
   const [tick, setTick] = useState(0);
 
+  const go = useCallback((i: number) => {
+    setCur(i);
+    setTick((t) => t + 1);
+  }, []);
+
+  const swipe = useSwipe((d) => {
+    if (d === "left") go((cur + 1) % NEWS.length);
+    if (d === "right") go((cur - 1 + NEWS.length) % NEWS.length);
+  });
+
+  // No autoplay while a finger is on the item.
   useEffect(() => {
+    if (swipe.active) return;
     const id = setInterval(() => setCur((c) => (c + 1) % NEWS.length), INTERVAL_MS);
     return () => clearInterval(id);
-  }, [tick]);
+  }, [tick, swipe.active]);
 
   const item = NEWS[cur];
 
   return (
-    <div className={styles.news}>
+    <div className={styles.news} {...swipe.handlers}>
       <span className="meta-b">News — {item.tag}</span>
       <span className="display">{item.title}</span>
       <p className={cx("body-copy", styles.body)}>{item.body}</p>
@@ -33,16 +46,7 @@ export function NewsRotator() {
       </a>
       <div className={cx(dots.dots, styles.dots)}>
         {NEWS.map((n, i) => (
-          <button
-            key={n.title}
-            type="button"
-            title={n.title}
-            className={cx(dots.dot, i === cur && dots.on)}
-            onClick={() => {
-              setCur(i);
-              setTick((t) => t + 1);
-            }}
-          />
+          <button key={n.title} type="button" title={n.title} className={cx(dots.dot, i === cur && dots.on)} onClick={() => go(i)} />
         ))}
       </div>
     </div>

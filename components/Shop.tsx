@@ -36,6 +36,7 @@ function specOf(p: Product): string {
 export function Shop() {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sort, setSort] = useState<Sort>("Featured");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // The URL hash (for example #Stems) selects one category.
   useEffect(() => {
@@ -70,36 +71,44 @@ export function Shop() {
     { title: "Finish", key: "fins", values: FINISHES },
   ];
 
-  const hasFilters = filters.cats.length + filters.mats.length + filters.fins.length > 0;
+  const filterCount = filters.cats.length + filters.mats.length + filters.fins.length;
+  const hasFilters = filterCount > 0;
   const clearAll = () => setFilters(NO_FILTERS);
 
   return (
     <div className={layout.withSidebar}>
       <aside className={layout.ruleR}>
-        <div className={cx(layout.sticky, layout.stack)}>
-          {filterGroups.map((g) => (
-            <div key={g.key} className={cx(layout.stack, layout.gap12, layout.ruleB, styles.filterGroup)}>
-              <span className="meta-b">{g.title}</span>
-              {g.values.map((v) => {
-                const on = filters[g.key].includes(v);
-                const count = PRODUCTS.filter((p) => p[FIELD[g.key]] === v && matches(p, filters, g.key)).length;
-                return (
-                  <button key={v} type="button" className={styles.option} aria-pressed={on} onClick={() => toggle(g.key, v)}>
-                    <span className={styles.box} />
-                    <span className={styles.optionLabel}>{v}</span>
-                    <span className="meta muted">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-          {hasFilters && (
-            <div className={layout.cell}>
-              <button type="button" className={button.text} onClick={clearAll}>
-                Clear all filters
-              </button>
-            </div>
-          )}
+        {/* Phone only: the filters are closed at first, so the products show first. */}
+        <button type="button" className={cx("meta-b", styles.filterToggle)} aria-expanded={filtersOpen} aria-controls="shop-filters" onClick={() => setFiltersOpen((o) => !o)}>
+          <span>Filters ({filterCount})</span>
+          <span aria-hidden>{filtersOpen ? "−" : "+"}</span>
+        </button>
+        <div id="shop-filters" className={cx(layout.sticky, filtersOpen ? styles.filtersOpen : styles.filtersClosed)}>
+          <div className={layout.stack}>
+            {filterGroups.map((g) => (
+              <div key={g.key} className={cx(layout.stack, layout.gap12, layout.ruleB, styles.filterGroup)}>
+                <span className="meta-b">{g.title}</span>
+                {g.values.map((v) => {
+                  const on = filters[g.key].includes(v);
+                  const count = PRODUCTS.filter((p) => p[FIELD[g.key]] === v && matches(p, filters, g.key)).length;
+                  return (
+                    <button key={v} type="button" className={styles.option} aria-pressed={on} onClick={() => toggle(g.key, v)}>
+                      <span className={styles.box} />
+                      <span className={styles.optionLabel}>{v}</span>
+                      <span className="meta muted">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            {hasFilters && (
+              <div className={layout.cell}>
+                <button type="button" className={button.text} onClick={clearAll}>
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 

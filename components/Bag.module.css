@@ -28,3 +28,9 @@
   .item { grid-template-columns: 96px minmax(0, 1fr); }
   .item > :last-child { grid-column: 1 / -1; }
 }
+
+/* Touch */
+@media (pointer: coarse) {
+  .qty { height: 46px; } /* 44px buttons and two 1px borders */
+  .qty button, .qtyValue { width: 44px; }
+}

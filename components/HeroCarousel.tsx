@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { cx } from "@/lib/cx";
+import { useSwipe } from "@/lib/useSwipe";
 import styles from "./HeroCarousel.module.css";
 import { Placeholder } from "./Placeholder";
 import button from "./ui/button.module.css";
@@ -21,20 +22,27 @@ export function HeroCarousel() {
   // A new value restarts the timer after a manual pick.
   const [tick, setTick] = useState(0);
 
-  useEffect(() => {
-    const id = setInterval(() => setCur((c) => (c + 1) % SLIDES.length), INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [tick]);
-
   const go = useCallback((i: number) => {
     setCur(i);
     setTick((t) => t + 1);
   }, []);
 
+  const swipe = useSwipe((d) => {
+    if (d === "left") go((cur + 1) % SLIDES.length);
+    if (d === "right") go((cur - 1 + SLIDES.length) % SLIDES.length);
+  });
+
+  // No autoplay while a finger is on the slide.
+  useEffect(() => {
+    if (swipe.active) return;
+    const id = setInterval(() => setCur((c) => (c + 1) % SLIDES.length), INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [tick, swipe.active]);
+
   const slide = SLIDES[cur];
 
   return (
-    <section className={styles.hero}>
+    <section className={styles.hero} {...swipe.handlers}>
       {SLIDES.map((s, i) => (
         <div key={s.name} className={styles.slide} style={{ opacity: i === cur ? 1 : 0 }}>
           <Placeholder label={s.placeholder} />

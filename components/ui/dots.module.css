@@ -1,3 +1,10 @@
 .dots { display: flex; gap: var(--spacing-12); align-items: center; }
 .dot { width: 10px; height: 10px; border-radius: 50%; padding: 0; border: var(--rule); background: transparent; cursor: pointer; }
 .on { background: var(--color-ink-black); }
+
+/* Touch: the dot stays 10px, the ::after gives a 44px hit area. */
+@media (pointer: coarse) {
+  .dots { gap: 34px; }
+  .dot { position: relative; }
+  .dot::after { content: ""; position: absolute; inset: -17px; }
+}

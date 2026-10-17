@@ -1,6 +1,8 @@
 /* DS Button: black filled, no radius, no colour change on hover. */
 .button { display: inline-flex; align-items: center; justify-content: center; height: 60px; padding: 0 var(--button-pad-x); background: var(--color-ink-black); color: var(--color-paper-white); border: var(--rule); border-radius: var(--radius-buttons); font-size: var(--text-body); white-space: nowrap; cursor: pointer; }
-.button:hover { text-decoration: underline; }
+@media (hover: hover) {
+  .button:hover { text-decoration: underline; }
+}
 .button:disabled { background: var(--color-ash); border-color: var(--color-ash); color: var(--text-secondary); cursor: not-allowed; }
 .compact { padding: 0 var(--spacing-36); }
 .small { height: 40px; padding: 0 var(--spacing-20); }
@@ -9,3 +11,9 @@
 
 /* Text-only action, for example "Remove" or "Clear all filters". */
 .text { background: none; border: none; padding: 0; font-size: var(--text-meta); text-transform: uppercase; text-decoration: underline; cursor: pointer; }
+
+/* Touch */
+@media (pointer: coarse) {
+  .small { height: 44px; }
+  .text { display: inline-flex; align-items: center; min-height: 44px; }
+}

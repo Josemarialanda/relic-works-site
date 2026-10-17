@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { cx } from "@/lib/cx";
+import { useSwipe } from "@/lib/useSwipe";
 import styles from "./Collage.module.css";
 import { Placeholder } from "./Placeholder";
 
@@ -12,11 +13,20 @@ type Props = { tiles: CollageTile[]; columns: number; rowHeight: number; classNa
 export function Collage({ tiles, columns, rowHeight, className }: Props) {
   const [zoomed, setZoomed] = useState<string | null>(null);
 
+  const swipe = useSwipe((d) => d === "down" && setZoomed(null));
+
   useEffect(() => {
     if (!zoomed) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setZoomed(null);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Stop the page behind the lightbox from scrolling.
+    const root = document.documentElement;
+    const overflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      root.style.overflow = overflow;
+    };
   }, [zoomed]);
 
   // The grid size and tile spans are data, so they go in as custom properties and inline values.
@@ -39,7 +49,7 @@ export function Collage({ tiles, columns, rowHeight, className }: Props) {
         ))}
       </div>
       {zoomed && (
-        <div className={styles.lightbox} onClick={() => setZoomed(null)}>
+        <div className={styles.lightbox} onClick={() => setZoomed(null)} {...swipe.handlers}>
           <Placeholder label={zoomed} className={styles.zoomed} />
           <span className={cx("meta-b", styles.caption)}>{zoomed}</span>
           <button type="button" className={styles.close} aria-label="Close">

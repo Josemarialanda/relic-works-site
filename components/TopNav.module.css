@@ -9,3 +9,13 @@
   .brand { flex: 1; }
   .links { order: 3; flex: 0 0 100%; flex-wrap: wrap; gap: var(--spacing-12) var(--spacing-20); }
 }
+
+/* Touch */
+@media (pointer: coarse) {
+  .brand, .link { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* Touch on phone: the links are 44px high, so the rows need no gap. */
+@media (max-width: 767px) and (pointer: coarse) {
+  .nav, .links { row-gap: 0; }
+}

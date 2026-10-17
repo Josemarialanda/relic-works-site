@@ -5,7 +5,8 @@
    Desktop      the default styles, no media query
    Tablet       max-width: 1023px   (includes phones)
    Phone        max-width: 767px
+   Touch        pointer: coarse     (phones and tablets, tap targets of 44px or more)
 
-   Write each file base-first, then Tablet, then Phone, then Widescreen. */
+   Write each file base-first, then Tablet, then Phone, then Widescreen, then Touch. */
 :root { --page-max: 1280px; }
 @media (min-width: 1600px) { :root { --page-max: 1600px; } }

@@ -1,3 +1,5 @@
+/* The filter toggle shows only on phone. */
+.filterToggle { display: none; justify-content: space-between; align-items: center; width: 100%; min-height: var(--nav-height); padding: 0 var(--spacing-20); background: none; border: none; cursor: pointer; }
 .filterGroup { padding: var(--spacing-24) var(--spacing-20); }
 .option { display: flex; align-items: center; gap: var(--spacing-12); width: 100%; padding: var(--spacing-4) 0; background: none; border: none; font-size: var(--text-body); text-align: left; cursor: pointer; }
 .box { width: 12px; height: 12px; flex-shrink: 0; border: 1px solid currentColor; }
@@ -20,4 +22,14 @@
 /* Phone */
 @media (max-width: 767px) {
   .products { grid-template-columns: minmax(0, 1fr); }
+  .filterToggle { display: flex; }
+  .filtersOpen { border-top: var(--rule); }
+  .filtersClosed { display: none; }
+  .toolbar { flex-wrap: wrap; height: auto; min-height: var(--nav-height); gap: 0 var(--spacing-12); }
+}
+
+/* Touch */
+@media (pointer: coarse) {
+  .option { min-height: 44px; }
+  .sort { min-height: 44px; padding: 0 8px; }
 }

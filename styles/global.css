@@ -2,9 +2,17 @@
    Component styles live in *.module.css files next to each component. */
 
 a { color: inherit; text-decoration: none; }
-a:hover { text-decoration: underline; }
 button { font-family: inherit; color: inherit; }
-button:hover:not(:disabled) { text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: 4px; }
+
+/* Hover only for a mouse. On a touchscreen the hover state stays after a tap. */
+@media (hover: hover) {
+  a:hover { text-decoration: underline; }
+  button:hover:not(:disabled) { text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: 4px; }
+}
+
+/* Touch: no double-tap zoom delay, no grey iOS tap box. The opacity shows the tap. */
+a, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+a:active, button:active:not(:disabled) { opacity: 0.6; }
 h1, h2, p { margin: 0; }
 
 /* Text roles from the Postevand type scale */

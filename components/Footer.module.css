@@ -13,3 +13,9 @@
 @media (max-width: 767px) {
   .footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Touch */
+@media (pointer: coarse) {
+  .column { gap: 0; }
+  .column a { display: inline-flex; align-items: center; min-height: 44px; }
+}
