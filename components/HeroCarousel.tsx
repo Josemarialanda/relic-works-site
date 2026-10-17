@@ -61,7 +61,15 @@ export function HeroCarousel() {
       </div>
       <div className={styles.ctas}>
         <a className={button.button} href={`/shop#${encodeURIComponent(slide.name)}`}>
-          {slide.cta}
+          {/* All the labels share one cell, so the button is as wide as the longest label on every slide.
+              Hidden labels are not part of the accessible name. */}
+          <span className={styles.ctaLabels}>
+            {SLIDES.map((s) => (
+              <span key={s.name} className={s === slide ? undefined : styles.ctaHidden}>
+                {s.cta}
+              </span>
+            ))}
+          </span>
         </a>
         <Link className={cx(button.button, button.outline)} href="/bespoke">
           Configure your own

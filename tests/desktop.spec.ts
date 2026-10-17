@@ -325,3 +325,20 @@ test.describe("product range", () => {
     await expect(page.getByText("Integrated spacer height")).toBeVisible();
   });
 });
+
+test("the hero buttons have the same width as each other on every slide", async ({ page }) => {
+  for (const width of [320, 430, 600, 820, 1280, 1680]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const hero = page.locator("section").first();
+    const ctas = hero.locator(`a[class*="button"]`);
+    const widths = new Set<number>();
+    for (const [i, name] of ["Shop stems", "Shop spacers", "Shop caps"].entries()) {
+      await hero.locator("button[title]").nth(i).click();
+      // Only the label of the current slide is in the accessible name.
+      await expect(hero.getByRole("link", { name, exact: true })).toBeVisible();
+      for (const box of await Promise.all((await ctas.all()).map((a) => a.boundingBox()))) widths.add(Math.round(box!.width));
+    }
+    expect([...widths], `at ${width}px`).toHaveLength(1);
+  }
+});

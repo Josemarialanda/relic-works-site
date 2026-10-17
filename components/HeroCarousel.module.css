@@ -4,7 +4,11 @@
 .kicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-4); }
 .kickerMeta { font-weight: var(--font-weight-regular); }
 .dots { position: absolute; right: var(--spacing-20); bottom: var(--spacing-24); z-index: 2; }
-.ctas { position: absolute; left: var(--spacing-20); bottom: 190px; display: flex; gap: var(--spacing-12); z-index: 2; }
+/* Two equal columns: both buttons are as wide as the wider one. */
+.ctas { position: absolute; left: var(--spacing-20); bottom: 190px; display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-12); z-index: 2; }
+.ctaLabels { display: grid; }
+.ctaLabels > * { grid-area: 1 / 1; }
+.ctaHidden { visibility: hidden; }
 .poster { position: absolute; left: 16px; bottom: var(--spacing-12); }
 
 /* Tablet */
@@ -17,8 +21,13 @@
 @media (max-width: 767px) {
   .hero { height: 560px; }
   .dots { bottom: calc(var(--spacing-12) + 14vw + var(--spacing-24)); }
-  .ctas { right: var(--spacing-20); bottom: calc(14vw + 100px); flex-wrap: wrap; }
+  .ctas { bottom: calc(14vw + 100px); }
   .poster { left: var(--spacing-12); }
+}
+
+/* Narrow phone: the two buttons do not fit side by side, so they stack. */
+@media (max-width: 559px) {
+  .ctas { grid-template-columns: 1fr; }
 }
 
 /* Widescreen */
