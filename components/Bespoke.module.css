@@ -30,6 +30,9 @@
 @media (max-width: 767px) {
   .photo { position: relative; height: 320px; }
   .options { padding: var(--spacing-24) var(--spacing-20); }
+  /* The tab row was 330px wide, so a 320px phone scrolled sideways. */
+  .tabs { gap: var(--spacing-12); }
+  .tabsLabel { padding-right: var(--spacing-12); }
 }
 
 /* Touch */

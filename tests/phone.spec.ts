@@ -235,3 +235,47 @@ test.describe("filled buttons and footer links on touch", () => {
     await expect(link).toHaveCSS("color", before);
   });
 });
+
+test.describe("stem calculator", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "Stem calculator" }).tap();
+  });
+
+  test("it fills the screen, with no sideways scroll", async ({ page }) => {
+    const dialog = page.getByRole("dialog", { name: "Stem calculator" });
+    await expect(dialog).toBeVisible();
+    const box = (await dialog.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(box).toMatchObject({ x: 0, y: 0, width: viewport.width, height: viewport.height });
+    expect(await dialog.evaluate((d) => d.scrollWidth > d.clientWidth)).toBe(false);
+  });
+
+  test("the drawing and the result stay in view when the sliders scroll", async ({ page }) => {
+    const dialog = page.getByRole("dialog", { name: "Stem calculator" });
+    await dialog.evaluate((d) => d.scrollTo(0, d.scrollHeight));
+    const drawing = (await dialog.getByRole("img").boundingBox())!;
+    expect(drawing.y).toBeGreaterThanOrEqual(0);
+    expect(drawing.y + drawing.height).toBeLessThan(page.viewportSize()!.height);
+    await expect(dialog.getByText(/than stem 2/)).toBeInViewport();
+  });
+
+  test("the sliders and the close button are large enough to tap", async ({ page }) => {
+    const dialog = page.getByRole("dialog", { name: "Stem calculator" });
+    await expectTapTargets(dialog.locator("input[type=range]"));
+    const close = (await dialog.getByRole("button", { name: "Close" }).boundingBox())!;
+    expect(close.width).toBeGreaterThanOrEqual(MIN_TARGET);
+    expect(close.height).toBeGreaterThanOrEqual(MIN_TARGET);
+  });
+
+  test("the page behind does not scroll while it is open", async ({ page }) => {
+    expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("hidden");
+    await page.getByRole("dialog").getByRole("button", { name: "Close" }).tap();
+    expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
+  });
+});
+
+test("the bespoke page does not scroll sideways", async ({ page }) => {
+  await page.goto("/bespoke");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+});

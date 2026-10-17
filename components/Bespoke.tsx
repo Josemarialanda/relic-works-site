@@ -5,6 +5,8 @@ import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bespoke.module.css";
 import { Placeholder } from "./Placeholder";
+import { StemCalculator } from "./StemCalculator";
+import button from "./ui/button.module.css";
 
 const PARTS = [
   { id: "stems", label: "Stems", base: 220, headline: "Your length. Your angle. Your finish.", body: "Set the reach, rise and clamp, choose a finish. We machine it to order." },
@@ -76,6 +78,7 @@ export function Bespoke() {
   const [finish, setFinish] = useState("Painted");
   const [color, setColor] = useState("Green");
   const [custom, setCustom] = useState({ height: "", length: "", angle: "" });
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   // The URL hash (#stems, #spacers or #caps) selects the part.
   useEffect(() => {
@@ -184,8 +187,19 @@ export function Bespoke() {
               )}
             </div>
           )}
+
+          {isStem && (
+            <div className={cx(layout.stack, layout.gap12)}>
+              <span className="meta-b">Not sure about length and angle?</span>
+              <button type="button" className={cx(button.button, button.outline)} aria-haspopup="dialog" onClick={() => setCalculatorOpen(true)}>
+                Stem calculator
+              </button>
+            </div>
+          )}
         </div>
       </section>
+
+      <StemCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
     </main>
   );
 }
