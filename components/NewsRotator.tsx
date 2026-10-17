@@ -7,8 +7,8 @@ import styles from "./NewsRotator.module.css";
 import dots from "./ui/dots.module.css";
 
 const NEWS = [
-  { tag: "New stem", title: "The Relic Quill.", body: "A fillet-brazed quill stem for threaded builds. 80–120 mm extension, in raw, polished or painted.", link: "Shop the Quill", href: "/shop#Stems" },
-  { tag: "New cap", title: "Hammered Ti cap.", body: "Each titanium top cap is hand-hammered before finishing, so no two are the same.", link: "Shop caps", href: "/shop#Caps" },
+  { tag: "New stem", title: "Quill Stem.", body: "A fillet-brazed quill stem for threaded builds. 80–120 mm extension, in raw, polished or painted.", link: "Shop stems", href: "/shop#Stems" },
+  { tag: "New cap", title: "Spacer Cap.", body: "A titanium top cap with an integrated spacer, so your stack has one part less.", link: "Shop caps", href: "/shop#Caps" },
 ];
 
 const INTERVAL_MS = 6000;

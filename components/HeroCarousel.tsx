@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { fromPrice } from "@/lib/catalog";
 import { cx } from "@/lib/cx";
 import { useSwipe } from "@/lib/useSwipe";
 import styles from "./HeroCarousel.module.css";
@@ -10,9 +11,9 @@ import button from "./ui/button.module.css";
 import dots from "./ui/dots.module.css";
 
 const SLIDES = [
-  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: "Steel · Titanium · Aluminium · From £165", cta: "Shop stems", image: "/images/home/hero-stems.svg", alt: "A turned and brazed stem" },
-  { name: "Spacers", kicker: "Spacers", meta: "Machined stacks in every finish · From £24", cta: "Shop spacers", image: "/images/home/hero-spacers.svg", alt: "A stack of machined spacers" },
-  { name: "Caps", kicker: "Caps", meta: "Hammered, painted or polished · From £32", cta: "Shop caps", image: "/images/home/hero-caps.svg", alt: "A hammered stem cap" },
+  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: `Quill and threadless · From £${fromPrice("Stems")}`, cta: "Shop stems", image: "/images/home/hero-stems.svg", alt: "A quill stem and a threadless stem" },
+  { name: "Spacers", kicker: "Spacers", meta: `For 1" and 1 1/8" steerers · From £${fromPrice("Spacers")}`, cta: "Shop spacers", image: "/images/home/hero-spacers.svg", alt: "A stack of machined spacers" },
+  { name: "Caps", kicker: "Caps", meta: `Flat caps and spacer caps · From £${fromPrice("Caps")}`, cta: "Shop caps", image: "/images/home/hero-caps.svg", alt: "A flat cap and a spacer cap" },
 ];
 
 const INTERVAL_MS = 5000;

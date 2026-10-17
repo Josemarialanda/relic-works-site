@@ -272,7 +272,56 @@ test.describe("images", () => {
 
   test("the lightbox shows the photo of the tile", async ({ page }) => {
     await page.goto("/workshop");
-    await page.locator("button[title='View Window cruiser bar']").click();
-    await expect(page.locator("img[src='/images/workshop/collage-window-cruiser-bar.svg']")).toHaveCount(2);
+    await page.locator("button[title='View Flat Cap']").click();
+    await expect(page.locator("img[src='/images/workshop/collage-flat-cap.svg']")).toHaveCount(2);
+  });
+});
+
+test.describe("product range", () => {
+  const PRODUCTS = ["Quill Stem", "Threadless Stem", `1" Spacer`, `1 1/8" Spacer`, "Flat Cap", "Spacer Cap"];
+
+  test("the shop sells only the six products, two in each category", async ({ page }) => {
+    await page.goto("/shop");
+    await expect(page.getByText("6 products", { exact: true })).toBeVisible();
+    for (const name of PRODUCTS) await expect(page.getByText(name, { exact: true })).toHaveCount(1);
+  });
+
+  test("the home page prices come from the catalog", async ({ page }) => {
+    await page.goto("/");
+    for (const [cat, price] of [["Stems", "£185"], ["Spacers", "£24"], ["Caps", "£32"]])
+      await expect(page.locator("main a", { has: page.getByText(cat, { exact: true }) })).toContainText(`From ${price}`);
+  });
+
+  test("a bag saved with a product that the shop no longer sells drops that product", async ({ page }) => {
+    await page.goto("/bag");
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "relic-bag",
+        JSON.stringify([
+          { key: "Relic Quill|Steel · Raw", type: "Stems", name: "Relic Quill", spec: "Steel · Raw", price: 210, qty: 1, image: null },
+          { key: "Flat Cap|Aluminium · Painted", type: "Caps", name: "Flat Cap", spec: "Aluminium · Painted", price: 32, qty: 1, image: null },
+        ]),
+      ),
+    );
+    await page.reload();
+    // An item with no image shows its name twice: on the placeholder tile and as the item name.
+    await expect(page.getByText("Flat Cap", { exact: true }).last()).toBeVisible();
+    await expect(page.getByText("Relic Quill")).toHaveCount(0);
+  });
+
+  test("the bespoke page offers the product types of each part", async ({ page }) => {
+    await page.goto("/bespoke");
+    const chip = (name: string) => page.getByRole("button", { name, exact: true });
+    for (const name of ["Quill", "Threadless"]) await expect(chip(name)).toBeVisible();
+
+    await page.getByRole("button", { name: "Spacers", exact: true }).click();
+    for (const name of [`1"`, `1 1/8"`]) await expect(chip(name)).toBeVisible();
+
+    await page.getByRole("button", { name: "Caps", exact: true }).click();
+    await expect(chip("Flat cap")).toHaveAttribute("aria-pressed", "true");
+    // A flat cap has no integrated spacer.
+    await expect(page.getByText("Integrated spacer height")).toHaveCount(0);
+    await chip("Spacer cap").click();
+    await expect(page.getByText("Integrated spacer height")).toBeVisible();
   });
 });

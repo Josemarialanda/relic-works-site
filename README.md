@@ -40,6 +40,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 - `lib/catalog.ts`: the product catalog.
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
 - `public/`: images, icons and fonts, in one folder for each kind and page. See `public/README.md`.
+- `scripts/mock-images.mjs`: draws the mock product images in `public/images`. Run it with `npm run images`.
 
 ## Deployment
 

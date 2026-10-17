@@ -9,17 +9,25 @@ import { StemCalculator } from "./StemCalculator";
 import button from "./ui/button.module.css";
 
 const PARTS = [
-  { id: "stems", label: "Stems", base: 220, image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Set the reach, rise and clamp, choose a finish. We machine it to order." },
-  { id: "spacers", label: "Spacers", base: 30, image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Set each spacer height, choose a finish per piece and mix colours across the stack." },
-  { id: "caps", label: "Caps", base: 40, image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a profile and texture, pick a finish." },
+  { id: "stems", label: "Stems", base: 220, image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
+  { id: "spacers", label: "Spacers", base: 30, image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Choose your steerer size, set each spacer height, choose a finish per piece and mix colours across the stack." },
+  { id: "caps", label: "Caps", base: 40, image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a flat cap or a spacer cap, pick a finish." },
 ] as const;
 
 type PartId = (typeof PARTS)[number]["id"];
 
+// The product types that the shop sells, one set for each part.
+const TYPES: Record<PartId, { label: string; options: string[]; initial: string }> = {
+  stems: { label: "Type", options: ["Quill", "Threadless"], initial: "Threadless" },
+  spacers: { label: "Steerer size", options: [`1"`, `1 1/8"`], initial: `1 1/8"` },
+  caps: { label: "Type", options: ["Flat cap", "Spacer cap"], initial: "Flat cap" },
+};
+
 const HEIGHTS: Record<PartId, { label: string; options: string[]; initial: string }> = {
   stems: { label: "Height", options: ["35 mm", "40 mm", "45 mm", "50 mm", "Custom"], initial: "40 mm" },
   spacers: { label: "Height", options: ["2.5 mm", "5 mm", "10 mm", "15 mm", "20 mm", "Custom"], initial: "10 mm" },
-  caps: { label: "Integrated spacer height", options: ["0 mm", "5 mm", "10 mm", "15 mm", "Custom"], initial: "5 mm" },
+  // A spacer cap with no spacer is a flat cap, so there is no 0 mm option.
+  caps: { label: "Integrated spacer height", options: ["5 mm", "10 mm", "15 mm", "Custom"], initial: "5 mm" },
 };
 
 const MATERIALS = ["Steel", "Titanium", "Aluminium"];
@@ -72,6 +80,7 @@ export function Bespoke() {
   const [part, setPart] = useState<PartId>("stems");
   const [material, setMaterial] = useState("Steel");
   const [bond, setBond] = useState("Brazed");
+  const [types, setTypes] = useState<Record<PartId, string>>({ stems: TYPES.stems.initial, spacers: TYPES.spacers.initial, caps: TYPES.caps.initial });
   const [heights, setHeights] = useState<Record<PartId, string>>({ stems: HEIGHTS.stems.initial, spacers: HEIGHTS.spacers.initial, caps: HEIGHTS.caps.initial });
   const [length, setLength] = useState("90 mm");
   const [angle, setAngle] = useState("±6°");
@@ -99,6 +108,9 @@ export function Bespoke() {
   // Brazing is steel only, so other materials are always welded.
   const bondLocked = material !== "Steel";
   const height = HEIGHTS[part];
+  const type = TYPES[part];
+  // A flat cap has no integrated spacer, so it has no height to choose.
+  const hasHeight = !(part === "caps" && types.caps === "Flat cap");
 
   return (
     <main>
@@ -124,6 +136,8 @@ export function Bespoke() {
             <h2 className="heading">{bp.headline}</h2>
             <p className="body-copy muted">{bp.body}</p>
           </div>
+
+          <Chips label={type.label} options={type.options} value={types[part]} onPick={(v) => setTypes((t) => ({ ...t, [part]: v }))} />
 
           <Chips label="Material" options={MATERIALS} value={material} onPick={setMaterial} />
 
@@ -163,12 +177,14 @@ export function Bespoke() {
             )}
           </div>
 
-          <div className={cx(layout.stack, layout.gap12)}>
-            <Chips label={height.label} options={height.options} value={heights[part]} onPick={(v) => setHeights((h) => ({ ...h, [part]: v }))} />
-            {heights[part] === "Custom" && (
-              <CustomInput placeholder="e.g. 42" unit="mm" value={custom.height} onChange={(v) => setCustom((c) => ({ ...c, height: v }))} />
-            )}
-          </div>
+          {hasHeight && (
+            <div className={cx(layout.stack, layout.gap12)}>
+              <Chips label={height.label} options={height.options} value={heights[part]} onPick={(v) => setHeights((h) => ({ ...h, [part]: v }))} />
+              {heights[part] === "Custom" && (
+                <CustomInput placeholder="e.g. 42" unit="mm" value={custom.height} onChange={(v) => setCustom((c) => ({ ...c, height: v }))} />
+              )}
+            </div>
+          )}
 
           {isStem && (
             <div className={cx(layout.stack, layout.gap12)}>

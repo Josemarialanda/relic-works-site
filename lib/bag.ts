@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { isProduct } from "./catalog";
 
 export type BagItem = {
   key: string;
@@ -16,9 +17,9 @@ const CHANGE_EVENT = "relicbag";
 
 // Demo contents for a first visit, as in the design.
 const SEED: BagItem[] = [
-  { key: "Relic Brazed Stem|Steel · Painted", type: "Stems", name: "Relic Brazed Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/relic-brazed-stem.svg" },
-  { key: "Bespoke Stem|demo", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium · Polished · 40 mm height · 100 mm · ±17°", price: 290, qty: 1, image: "/images/bespoke/stems.svg", bespoke: true },
-  { key: "Hammered Ti Cap|Titanium · Raw", type: "Stem caps", name: "Hammered Ti Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/hammered-ti-cap.svg" },
+  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.svg" },
+  { key: "Bespoke Stem|demo", type: "Bespoke stem", name: "Bespoke Stem", spec: "Threadless · Titanium · Polished · 40 mm height · 100 mm · ±17°", price: 290, qty: 1, image: "/images/bespoke/stems.svg", bespoke: true },
+  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.svg" },
 ];
 
 const EMPTY: BagItem[] = [];
@@ -33,7 +34,9 @@ function isBagItem(v: unknown): v is BagItem {
     typeof i.spec === "string" &&
     typeof i.price === "number" &&
     Number.isInteger(i.qty) &&
-    (i.qty as number) > 0
+    (i.qty as number) > 0 &&
+    // A bag saved earlier can hold a product that the shop no longer sells.
+    (i.bespoke === true || isProduct(i.name as string))
   );
 }
 

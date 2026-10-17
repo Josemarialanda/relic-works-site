@@ -6,7 +6,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "images": "node scripts/mock-images.mjs"
   },
   "dependencies": {
     "next": "^16.4.2",

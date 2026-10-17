@@ -29,12 +29,12 @@ const FINISHES = [
 ];
 
 const COLLAGE = [
-  { alt: "Raw brazed stem", src: "/images/workshop/collage-raw-brazed-stem.svg", col: "span 2", row: "span 2" },
-  { alt: "Window cruiser bar", src: "/images/workshop/collage-window-cruiser-bar.svg" },
-  { alt: "Hammered stem cap", src: "/images/workshop/collage-hammered-stem-cap.svg" },
-  { alt: "Stem cap set", src: "/images/workshop/collage-stem-cap-set.svg", col: "span 2" },
-  { alt: "Gloss black brazed stem", src: "/images/workshop/collage-gloss-black-brazed-stem.svg", col: "span 2" },
-  { alt: "Brass short stem", src: "/images/workshop/collage-brass-short-stem.svg", col: "span 2" },
+  { alt: "Quill Stem", src: "/images/workshop/collage-quill-stem.svg", col: "span 2", row: "span 2" },
+  { alt: "Threadless Stem", src: "/images/workshop/collage-threadless-stem.svg" },
+  { alt: "Flat Cap", src: "/images/workshop/collage-flat-cap.svg" },
+  { alt: "Spacer Cap", src: "/images/workshop/collage-spacer-cap.svg", col: "span 2" },
+  { alt: `1 1/8" Spacer`, src: "/images/workshop/collage-spacer-1-1-8in.svg", col: "span 2" },
+  { alt: `1" Spacer`, src: "/images/workshop/collage-spacer-1in.svg", col: "span 2" },
 ];
 
 function NoteList({ title, items }: { title: string; items: { name: string; note: string }[] }) {
@@ -57,7 +57,7 @@ export default function WorkshopPage() {
   return (
     <main>
       <section className={styles.hero}>
-        <Photo src="/images/workshop/hero.svg" alt="Raw brazed stem held in the workshop" preload fill />
+        <Photo src="/images/workshop/hero.svg" alt="Quill Stem held in the workshop" preload fill />
         <span className={cx("meta-b", styles.heroKicker)}>Turned, milled and finished in the UK</span>
         <div className={cx("poster", styles.heroPoster)}>The workshop.</div>
       </section>
