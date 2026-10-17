@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#f0f1ef"/>
+  <path d="M0 0L1200 900M1200 0L0 900" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="898" fill="none" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="231" y="384.4" width="738" height="131.20000000000002" fill="#f0f1ef"/>
+  <g font-family="Inter, Helvetica, Arial, sans-serif" fill="#333333" text-anchor="middle">
+    <text x="600" y="445.9" font-size="41" letter-spacing="1">SPACERS</text>
+    <text x="600" y="495.1" font-size="25">1200 × 900</text>
+  </g>
+</svg>

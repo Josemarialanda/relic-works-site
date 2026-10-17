@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Collage } from "@/components/Collage";
-import { Placeholder } from "@/components/Placeholder";
+import { Photo } from "@/components/Photo";
 import button from "@/components/ui/button.module.css";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
@@ -10,9 +10,9 @@ import styles from "./workshop.module.css";
 export const metadata: Metadata = { title: "Workshop" };
 
 const STEPS = [
-  { num: "01", name: "Turned", body: "Bar stock is turned on the lathe into steerer clamps, caps and spacers." },
-  { num: "02", name: "Milled", body: "Bodies and faceplates are CNC milled, then brazed or welded by hand." },
-  { num: "03", name: "Finished", body: "Every part is finished and checked in-house before it ships." },
+  { num: "01", name: "Turned", image: "/images/workshop/process-turned.svg", body: "Bar stock is turned on the lathe into steerer clamps, caps and spacers." },
+  { num: "02", name: "Milled", image: "/images/workshop/process-milled.svg", body: "Bodies and faceplates are CNC milled, then brazed or welded by hand." },
+  { num: "03", name: "Finished", image: "/images/workshop/process-finished.svg", body: "Every part is finished and checked in-house before it ships." },
 ];
 
 const MATERIALS = [
@@ -29,12 +29,12 @@ const FINISHES = [
 ];
 
 const COLLAGE = [
-  { alt: "Raw brazed stem", col: "span 2", row: "span 2" },
-  { alt: "Window cruiser bar" },
-  { alt: "Hammered stem cap" },
-  { alt: "Stem cap set", col: "span 2" },
-  { alt: "Gloss black brazed stem", col: "span 2" },
-  { alt: "Brass short stem", col: "span 2" },
+  { alt: "Raw brazed stem", src: "/images/workshop/collage-raw-brazed-stem.svg", col: "span 2", row: "span 2" },
+  { alt: "Window cruiser bar", src: "/images/workshop/collage-window-cruiser-bar.svg" },
+  { alt: "Hammered stem cap", src: "/images/workshop/collage-hammered-stem-cap.svg" },
+  { alt: "Stem cap set", src: "/images/workshop/collage-stem-cap-set.svg", col: "span 2" },
+  { alt: "Gloss black brazed stem", src: "/images/workshop/collage-gloss-black-brazed-stem.svg", col: "span 2" },
+  { alt: "Brass short stem", src: "/images/workshop/collage-brass-short-stem.svg", col: "span 2" },
 ];
 
 function NoteList({ title, items }: { title: string; items: { name: string; note: string }[] }) {
@@ -57,7 +57,7 @@ export default function WorkshopPage() {
   return (
     <main>
       <section className={styles.hero}>
-        <Placeholder label="Raw brazed stem held in the workshop" fill />
+        <Photo src="/images/workshop/hero.svg" alt="Raw brazed stem held in the workshop" preload fill />
         <span className={cx("meta-b", styles.heroKicker)}>Turned, milled and finished in the UK</span>
         <div className={cx("poster", styles.heroPoster)}>The workshop.</div>
       </section>
@@ -79,7 +79,8 @@ export default function WorkshopPage() {
         {STEPS.map((s, i) => (
           <div key={s.name} className={cx(layout.stack, i < 2 && layout.ruleR)}>
             <div className={layout.ratio43}>
-              <Placeholder label={s.name} />
+              {/* The step name is the heading below, so the photo has no alt text. */}
+              <Photo src={s.image} alt="" sizes="(max-width: 767px) 100vw, 33vw" />
             </div>
             <div className={cx(layout.cell, layout.stack, layout.gap8)}>
               <div className={layout.between}>

@@ -5,14 +5,14 @@ import { useCallback, useEffect, useState } from "react";
 import { cx } from "@/lib/cx";
 import { useSwipe } from "@/lib/useSwipe";
 import styles from "./HeroCarousel.module.css";
-import { Placeholder } from "./Placeholder";
+import { Photo } from "./Photo";
 import button from "./ui/button.module.css";
 import dots from "./ui/dots.module.css";
 
 const SLIDES = [
-  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: "Steel · Titanium · Aluminium · From £165", cta: "Shop stems", placeholder: "Photo to come" },
-  { name: "Spacers", kicker: "Spacers", meta: "Machined stacks in every finish · From £24", cta: "Shop spacers", placeholder: "Spacer photo to come" },
-  { name: "Caps", kicker: "Caps", meta: "Hammered, painted or polished · From £32", cta: "Shop caps", placeholder: "Photo to come" },
+  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: "Steel · Titanium · Aluminium · From £165", cta: "Shop stems", image: "/images/home/hero-stems.svg", alt: "A turned and brazed stem" },
+  { name: "Spacers", kicker: "Spacers", meta: "Machined stacks in every finish · From £24", cta: "Shop spacers", image: "/images/home/hero-spacers.svg", alt: "A stack of machined spacers" },
+  { name: "Caps", kicker: "Caps", meta: "Hammered, painted or polished · From £32", cta: "Shop caps", image: "/images/home/hero-caps.svg", alt: "A hammered stem cap" },
 ];
 
 const INTERVAL_MS = 5000;
@@ -45,7 +45,8 @@ export function HeroCarousel() {
     <section className={styles.hero} {...swipe.handlers}>
       {SLIDES.map((s, i) => (
         <div key={s.name} className={styles.slide} style={{ opacity: i === cur ? 1 : 0 }}>
-          <Placeholder label={s.placeholder} />
+          {/* The first slide shows at load, so load it first. */}
+          <Photo src={s.image} alt={s.alt} preload={i === 0} />
         </div>
       ))}
       <div className={cx("meta-b", styles.kicker)}>

@@ -134,11 +134,11 @@ export function Shop() {
             <div className={styles.products}>
               {g.items.map((p) => (
                 <div key={p.name} className={cx(layout.stack, layout.gap12)}>
-                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} />
+                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} image={p.image} />
                   <button
                     type="button"
                     className={cx(button.button, button.small, button.block)}
-                    onClick={() => addToBag({ key: `${p.name}|${specOf(p)}`, type: p.cat, name: p.name, spec: specOf(p), price: p.price, image: null })}
+                    onClick={() => addToBag({ key: `${p.name}|${specOf(p)}`, type: p.cat, name: p.name, spec: specOf(p), price: p.price, image: p.image })}
                   >
                     Add to bag
                   </button>

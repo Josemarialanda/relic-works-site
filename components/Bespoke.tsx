@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bespoke.module.css";
-import { Placeholder } from "./Placeholder";
+import { Photo } from "./Photo";
 import { StemCalculator } from "./StemCalculator";
 import button from "./ui/button.module.css";
 
 const PARTS = [
-  { id: "stems", label: "Stems", base: 220, headline: "Your length. Your angle. Your finish.", body: "Set the reach, rise and clamp, choose a finish. We machine it to order." },
-  { id: "spacers", label: "Spacers", base: 30, headline: "Your stack, to the millimetre.", body: "Set each spacer height, choose a finish per piece and mix colours across the stack." },
-  { id: "caps", label: "Caps", base: 40, headline: "Your cap. Your mark.", body: "Choose a profile and texture, pick a finish." },
+  { id: "stems", label: "Stems", base: 220, image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Set the reach, rise and clamp, choose a finish. We machine it to order." },
+  { id: "spacers", label: "Spacers", base: 30, image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Set each spacer height, choose a finish per piece and mix colours across the stack." },
+  { id: "caps", label: "Caps", base: 40, image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a profile and texture, pick a finish." },
 ] as const;
 
 type PartId = (typeof PARTS)[number]["id"];
@@ -113,7 +113,7 @@ export function Bespoke() {
 
       <section id="configure" className={cx(layout.split75, layout.ruleB)}>
         <div className={cx(layout.ruleR, styles.photo)}>
-          <Placeholder label={`${bp.label} photo to come`} fill />
+          <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 58vw" fill />
         </div>
 
         <div className={cx(layout.stack, layout.gap36, styles.options)}>

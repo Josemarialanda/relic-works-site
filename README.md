@@ -39,6 +39,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 - `components/`: the React components, each with a CSS module.
 - `lib/catalog.ts`: the product catalog.
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
+- `public/`: images, icons and fonts, in one folder for each kind and page. See `public/README.md`.
 
 ## Deployment
 

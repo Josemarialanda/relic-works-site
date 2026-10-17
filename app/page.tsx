@@ -3,7 +3,7 @@ import { Collage } from "@/components/Collage";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { NewsRotator } from "@/components/NewsRotator";
-import { Placeholder } from "@/components/Placeholder";
+import { Photo } from "@/components/Photo";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import styles from "./page.module.css";
@@ -15,18 +15,18 @@ const PROMISES = [
 ];
 
 const CATEGORIES = [
-  { name: "Stems", meta: "From £165", placeholder: "Photo to come" },
-  { name: "Spacers", meta: "From £24", placeholder: "Spacer photo to come" },
-  { name: "Caps", meta: "From £32", placeholder: "Photo to come" },
+  { name: "Stems", meta: "From £165", image: "/images/home/category-stems.svg" },
+  { name: "Spacers", meta: "From £24", image: "/images/home/category-spacers.svg" },
+  { name: "Caps", meta: "From £32", image: "/images/home/category-caps.svg" },
 ];
 
 const COLLAGE = [
-  { alt: "Raw brazed stem", col: "span 2", row: "span 2" },
-  { alt: "Hammered stem cap" },
-  { alt: "Stem cap set" },
-  { alt: "Gloss black brazed stem" },
-  { alt: "Window cruiser bar" },
-  { alt: "Brass short stem" },
+  { alt: "Raw brazed stem", src: "/images/home/collage-raw-brazed-stem.svg", col: "span 2", row: "span 2" },
+  { alt: "Hammered stem cap", src: "/images/home/collage-hammered-stem-cap.svg" },
+  { alt: "Stem cap set", src: "/images/home/collage-stem-cap-set.svg" },
+  { alt: "Gloss black brazed stem", src: "/images/home/collage-gloss-black-brazed-stem.svg" },
+  { alt: "Window cruiser bar", src: "/images/home/collage-window-cruiser-bar.svg" },
+  { alt: "Brass short stem", src: "/images/home/collage-brass-short-stem.svg" },
 ];
 
 export default function HomePage() {
@@ -47,7 +47,8 @@ export default function HomePage() {
         {CATEGORIES.map((c, i) => (
           <a key={c.name} className={cx(layout.stack, i < 2 && layout.ruleR)} href={`/shop#${c.name}`}>
             <div className={layout.ratio43}>
-              <Placeholder label={c.placeholder} />
+              {/* The category name is the link text, so the photo has no alt text. */}
+              <Photo src={c.image} alt="" sizes="(max-width: 767px) 100vw, 33vw" />
             </div>
             <div className={cx(layout.cell, layout.between)}>
               <span className="subheading">{c.name}</span>
@@ -78,7 +79,7 @@ export default function HomePage() {
         <NewsRotator />
         <div className={layout.stack}>
           <div className={cx(layout.ruleB, styles.newsPhoto)}>
-            <Placeholder label="Photo to come" fill />
+            <Photo src="/images/home/news.svg" alt="Parts on the workshop bench" sizes="(max-width: 767px) 100vw, 50vw" fill />
           </div>
           <NewsletterForm />
         </div>

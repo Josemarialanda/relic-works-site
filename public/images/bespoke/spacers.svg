@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+  <rect width="1200" height="1500" fill="#f0f1ef"/>
+  <path d="M0 0L1200 1500M1200 0L0 1500" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="1498" fill="none" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="105" y="662" width="990" height="176" fill="#f0f1ef"/>
+  <g font-family="Inter, Helvetica, Arial, sans-serif" fill="#333333" text-anchor="middle">
+    <text x="600" y="744.5" font-size="55" letter-spacing="1">BESPOKE SPACERS</text>
+    <text x="600" y="810.5" font-size="33">1200 × 1500</text>
+  </g>
+</svg>

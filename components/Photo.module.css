@@ -1,0 +1,6 @@
+/* Photo box: bone tile under the image, the same size rules as the Placeholder. */
+.photo { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--color-bone); }
+.fill { position: absolute; inset: 0; }
+.image { object-fit: cover; }
+.contain { background: none; }
+.contain .image { object-fit: contain; }

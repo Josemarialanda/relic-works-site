@@ -4,14 +4,14 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { cx } from "@/lib/cx";
 import { useSwipe } from "@/lib/useSwipe";
 import styles from "./Collage.module.css";
-import { Placeholder } from "./Placeholder";
+import { Photo } from "./Photo";
 
-export type CollageTile = { alt: string; col?: string; row?: string };
+export type CollageTile = { alt: string; src: string; col?: string; row?: string };
 
 type Props = { tiles: CollageTile[]; columns: number; rowHeight: number; className?: string };
 
 export function Collage({ tiles, columns, rowHeight, className }: Props) {
-  const [zoomed, setZoomed] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState<CollageTile | null>(null);
 
   const swipe = useSwipe((d) => d === "down" && setZoomed(null));
 
@@ -42,16 +42,16 @@ export function Collage({ tiles, columns, rowHeight, className }: Props) {
             className={styles.tile}
             title={`View ${t.alt}`}
             style={{ gridColumn: t.col ?? "auto", gridRow: t.row ?? "auto" }}
-            onClick={() => setZoomed(t.alt)}
+            onClick={() => setZoomed(t)}
           >
-            <Placeholder label={t.alt} />
+            <Photo src={t.src} alt={t.alt} sizes="(max-width: 767px) 50vw, 33vw" />
           </button>
         ))}
       </div>
       {zoomed && (
         <div className={styles.lightbox} onClick={() => setZoomed(null)} {...swipe.handlers}>
-          <Placeholder label={zoomed} className={styles.zoomed} />
-          <span className={cx("meta-b", styles.caption)}>{zoomed}</span>
+          <Photo src={zoomed.src} alt={zoomed.alt} fit="contain" className={styles.zoomed} />
+          <span className={cx("meta-b", styles.caption)}>{zoomed.alt}</span>
           <button type="button" className={styles.close} aria-label="Close">
             ×
           </button>

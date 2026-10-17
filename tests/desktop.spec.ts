@@ -245,3 +245,34 @@ test("the stem calculator keeps its height when the result needs more lines", as
     expect((await dialog.boundingBox())!.height, `result text at ${size}px`).toBe(short);
   }
 });
+
+test.describe("images", () => {
+  for (const path of ["/", "/shop", "/bespoke", "/bag", "/workshop"]) {
+    test(`all images on ${path} load`, async ({ page }) => {
+      await page.goto(path);
+      const imgs = page.locator("main img, section img");
+      expect(await imgs.count()).toBeGreaterThan(0);
+      // Lazy images load only near the view, so scroll each one into view first.
+      for (const img of await imgs.all()) {
+        await img.scrollIntoViewIfNeeded();
+        await expect(img).toHaveJSProperty("complete", true);
+        expect(await img.evaluate((e: HTMLImageElement) => e.naturalWidth), (await img.getAttribute("src")) ?? "img").toBeGreaterThan(0);
+      }
+    });
+  }
+
+  test("the home and workshop pages use their own copy of the collage images", async ({ page }) => {
+    for (const [path, folder] of [["/", "/images/home/"], ["/workshop", "/images/workshop/"]]) {
+      await page.goto(path);
+      const srcs = await page.locator("button[title^='View'] img").evaluateAll((els) => els.map((e) => e.getAttribute("src")));
+      expect(srcs.length).toBe(6);
+      for (const src of srcs) expect(src).toContain(`${folder}collage-`);
+    }
+  });
+
+  test("the lightbox shows the photo of the tile", async ({ page }) => {
+    await page.goto("/workshop");
+    await page.locator("button[title='View Window cruiser bar']").click();
+    await expect(page.locator("img[src='/images/workshop/collage-window-cruiser-bar.svg']")).toHaveCount(2);
+  });
+});

@@ -5,6 +5,7 @@ import { bagCount, gbp, setBag, useBag, type BagItem } from "@/lib/bag";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bag.module.css";
+import { Photo } from "./Photo";
 import { Placeholder } from "./Placeholder";
 import button from "./ui/button.module.css";
 
@@ -34,7 +35,8 @@ export function Bag() {
         {items.map((it) => (
           <div key={it.key} className={cx(styles.item, layout.ruleB)}>
             <div className={layout.ratio11}>
-              <Placeholder label={it.name} />
+              {/* Items saved before the bag had images have no image. */}
+              {it.image ? <Photo src={it.image} alt={it.name} sizes="160px" /> : <Placeholder label={it.name} />}
             </div>
             <div className={cx(layout.stack, layout.gap8)}>
               <span className="meta muted">{it.type}</span>

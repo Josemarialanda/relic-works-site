@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f0f1ef"/>
+  <path d="M0 0L1200 630M1200 0L0 630" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#d7d7d7" stroke-width="2"/>
+  <rect x="339" y="268.6" width="522" height="92.80000000000001" fill="#f0f1ef"/>
+  <g font-family="Inter, Helvetica, Arial, sans-serif" fill="#333333" text-anchor="middle">
+    <text x="600" y="312.1" font-size="29" letter-spacing="1">RELIC WORKS</text>
+    <text x="600" y="346.9" font-size="17">1200 × 630</text>
+  </g>
+</svg>
