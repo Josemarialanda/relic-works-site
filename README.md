@@ -23,6 +23,13 @@ Other scripts:
 - `npm run build`: make a production build.
 - `npm run start`: start the production server.
 - `npm run typecheck`: examine the types with `tsc`.
+- `npm test`: make a production build, then run the Playwright browser tests in `tests/`. The tests simulate a phone, a tablet and a desktop.
+
+## Tests
+
+The tests use Chromium. On NixOS, run them in the dev shell (`nix develop`), because it supplies the browsers from nixpkgs. Without Nix, install the browser first with `npx playwright install chromium`.
+
+The `@playwright/test` version in `package.json` must be the same as `playwright-driver.version` in the nixpkgs of `flake.lock`. When you update the flake, update `@playwright/test` to that exact version.
 
 VS Code tasks for these commands are in `.vscode/tasks.json`.
 

@@ -26,3 +26,8 @@ npm-debug.log*
 !.vscode/tasks.json
 .idea/
 .vercel
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/

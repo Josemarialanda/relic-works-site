@@ -41,6 +41,14 @@
         }
       },
       "presentation": { "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "Test",
+      "type": "shell",
+      "command": "nix develop -c npm test",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always" },
+      "group": { "kind": "test", "isDefault": true }
     }
   ]
 }

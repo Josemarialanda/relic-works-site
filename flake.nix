@@ -30,9 +30,14 @@
     in
     {
       devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
+        default = pkgs.mkShell ({
           packages = [ pkgs.nodejs_22 ];
-        };
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          # Browsers that npx playwright install downloads do not run on NixOS, so use the
+          # nixpkgs browsers. Keep @playwright/test in package.json at playwright-driver.version.
+          PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
+          PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
+        });
       });
 
       apps = forAllSystems (pkgs: rec {
