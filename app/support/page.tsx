@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { SupportNav } from "@/components/SupportNav";
 import { cx } from "@/lib/cx";
 import { gbp } from "@/lib/money";
-import { ZONES } from "@/lib/shipping";
+import { ZONES } from "@/data/shipping";
 import layout from "@/styles/layout.module.css";
 import styles from "./support.module.css";
 

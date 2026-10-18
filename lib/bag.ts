@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { PART_NAME, bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
+import { PART_NAME } from "../data/bespoke";
+import { bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
 import { MAX_QTY, productByName } from "./catalog";
 export { gbp } from "./money";
 

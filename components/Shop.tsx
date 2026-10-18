@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { addToBag } from "@/lib/bag";
-import { CATEGORIES, FINISHES, MATERIALS, PRODUCTS, type Category, type Product } from "@/lib/catalog";
+import { CATEGORIES, FINISHES, MATERIALS, PRODUCTS, type Category, type Product } from "@/data/products";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import { ProductCard } from "./ProductCard";

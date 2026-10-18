@@ -2,9 +2,11 @@
 // options. This file takes every price from the catalog and the bespoke rules, so the browser cannot
 // change a price. The route handler in app/api/checkout calls it before it talks to Stripe.
 
-import { bespokePrice, bespokeSpec, parseBespoke, PART_NAME, type BespokeConfig } from "./bespoke";
+import { PART_NAME } from "../data/bespoke";
+import { bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
 import { MAX_QTY, productByName } from "./catalog";
-import { shippingCost, zoneById, type Zone } from "./shipping";
+import type { Zone } from "../data/shipping";
+import { shippingCost, zoneById } from "./shipping";
 
 export type OrderLine = {
   name: string;

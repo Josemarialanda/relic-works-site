@@ -3,22 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { addToBag, bespokeBagItem } from "@/lib/bag";
-import {
-  ANGLES,
-  BASE_PRICE,
-  BONDS,
-  COLORS,
-  CUSTOM_RANGE,
-  FINISHES,
-  HEIGHTS,
-  LENGTHS,
-  MATERIALS,
-  parseBespoke,
-  PART_IDS,
-  TYPES,
-  type BespokeConfig,
-  type PartId,
-} from "@/lib/bespoke";
+import { ANGLES, BASE_PRICE, BONDS, COLORS, CUSTOM_RANGE, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
+import { parseBespoke, type BespokeConfig } from "@/lib/bespoke";
 import { cx } from "@/lib/cx";
 import { gbp } from "@/lib/money";
 import layout from "@/styles/layout.module.css";

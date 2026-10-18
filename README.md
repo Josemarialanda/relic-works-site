@@ -37,16 +37,17 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 
 - `app/`: the pages (home, shop, bespoke, bag, workshop, support).
 - `components/`: the React components, each with a CSS module.
-- `lib/catalog.ts`: the product catalog.
+- `data/`: the data that you edit to change the shop: products and prices, bespoke options and price rules, and delivery zones. See `data/README.md`.
+- `lib/catalog.ts`: functions that read the product data.
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
-- `lib/checkout.ts`, `lib/bespoke.ts`, `lib/shipping.ts`: the order check, the bespoke options and prices, and the delivery zones. The browser and the server both use them. See Checkout below.
+- `lib/checkout.ts`, `lib/bespoke.ts`, `lib/shipping.ts`: the order check, the bespoke check and price, and the delivery price. The browser and the server both use them. See Checkout below.
 - `app/api/checkout/route.ts`: starts a Stripe payment. `app/checkout/success/` is the page after payment.
 - `public/`: images, icons and fonts, in one folder for each kind and page. See `public/README.md`.
 - `scripts/mock-images.mjs`: draws the mock product images in `public/images`. Run it with `npm run images`.
 
 ## Checkout
 
-The site has a guest checkout with no accounts. The bag stays in the browser (`localStorage`). When the customer presses Checkout, the browser sends the server only product names, quantities, bespoke options and the delivery zone. The server takes every price from `lib/catalog.ts` and `lib/bespoke.ts`, so a price in the browser is never trusted. Then it creates a [Stripe Checkout](https://docs.stripe.com/payments/checkout) session. Stripe shows the payment page, collects the address, email and phone number, takes the payment and sends the receipt. The site stores no orders: read them in the Stripe dashboard. A bespoke order has its options in the metadata of its line item.
+The site has a guest checkout with no accounts. The bag stays in the browser (`localStorage`). When the customer presses Checkout, the browser sends the server only product names, quantities, bespoke options and the delivery zone. The server takes every price from the files in `data/`, so a price in the browser is never trusted. Then it creates a [Stripe Checkout](https://docs.stripe.com/payments/checkout) session. Stripe shows the payment page, collects the address, email and phone number, takes the payment and sends the receipt. The site stores no orders: read them in the Stripe dashboard. A bespoke order has its options in the metadata of its line item.
 
 To set it up:
 
@@ -57,8 +58,8 @@ To set it up:
 
 Before you go live, check these placeholders and open points:
 
-- **Bespoke prices.** The rules in `lib/bespoke.ts` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
-- **Delivery.** The prices and the countries of each zone are in `lib/shipping.ts`. The support page and the bag read the same file.
+- **Bespoke prices.** The rules in `data/bespoke.ts` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
+- **Delivery.** The prices and the countries of each zone are in `data/shipping.ts`. The support page and the bag read the same file.
 - **Tax and duties.** The checkout does not calculate VAT or import duties. The prices are the prices that the customer pays.
 - **Orders and stock.** There is no webhook, so the site does not send you an email, and it does not track stock. Add a Stripe webhook (`checkout.session.completed`) when you want either.
 - **Abuse.** The route has no rate limit. Add one (for example with Vercel Firewall) before you get real traffic.
