@@ -11,7 +11,13 @@
 .qtyValue { display: flex; align-items: center; justify-content: center; width: 36px; border-left: var(--rule); border-right: var(--rule); }
 
 .empty { padding: var(--spacing-80) var(--spacing-20); align-items: flex-start; }
-.emptyActions { display: flex; gap: var(--spacing-12); }
+/* Two equal buttons side by side when the column has space for both (2 × 240px + gap), else one
+   column. The column width, not the screen width, decides, so this also works next to the summary. */
+.emptyActions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--spacing-12); width: 100%; max-width: calc(2 * 240px + var(--spacing-12)); }
+/* In a very narrow column the label wraps, so it stays inside the button. If one word is still too wide,
+   the button clips it at its border. The buttons are at least 240px wide when there is space, so the
+   smaller side padding does not change the normal layout. */
+.emptyActions > * { height: auto; min-height: 60px; padding: 8px var(--spacing-12); white-space: normal; text-align: center; overflow: hidden; }
 
 .summaryHead { padding: var(--spacing-24) var(--spacing-20); }
 .totalLabel { font-weight: var(--font-weight-bold); }

@@ -342,3 +342,56 @@ test("the hero buttons have the same width as each other on every slide", async 
     expect([...widths], `at ${width}px`).toHaveLength(1);
   }
 });
+
+test("the empty bag buttons fit in their column and have the same width", async ({ page }) => {
+  await page.goto("/bag");
+  await page.evaluate(() => localStorage.setItem("relic-bag", "[]"));
+  // 768px to 1023px is the tablet layout, where the column is next to the summary.
+  for (const width of [320, 393, 559, 768, 820, 1023, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.reload();
+    const column = (await page.locator("main").boundingBox())!;
+    const boxes = await Promise.all(
+      ["Shop parts", "Configure your own"].map(async (name) => (await page.locator("main").getByRole("link", { name }).boundingBox())!),
+    );
+    for (const b of boxes) expect(b.x + b.width, `at ${width}px`).toBeLessThanOrEqual(column.x + column.width);
+    expect(boxes[0].width, `at ${width}px`).toBe(boxes[1].width);
+  }
+});
+
+test("the empty bag button labels stay inside the buttons in a very narrow window", async ({ page }) => {
+  await page.goto("/bag");
+  await page.evaluate(() => localStorage.setItem("relic-bag", "[]"));
+  // At 160px the button is narrower than the one-line label.
+  await page.setViewportSize({ width: 160, height: 900 });
+  await page.reload();
+  for (const name of ["Shop parts", "Configure your own"]) {
+    // Compare the box of the text itself with the box of the button.
+    const [text, button] = await page.locator("main").getByRole("link", { name }).evaluate((e) => {
+      const range = document.createRange();
+      range.selectNodeContents(e);
+      const t = range.getBoundingClientRect();
+      const b = e.getBoundingClientRect();
+      return [{ left: t.left, right: t.right }, { left: b.left, right: b.right }];
+    });
+    expect(text.left, name).toBeGreaterThanOrEqual(button.left);
+    expect(text.right, name).toBeLessThanOrEqual(button.right);
+  }
+});
+
+test("the empty bag buttons clip a label that cannot fit, so no text shows outside them", async ({ page }) => {
+  await page.goto("/bag");
+  await page.evaluate(() => localStorage.setItem("relic-bag", "[]"));
+  // At 75px the word "Configure" alone is wider than the button.
+  await page.setViewportSize({ width: 75, height: 900 });
+  await page.reload();
+  for (const name of ["Shop parts", "Configure your own"]) {
+    const link = page.locator("main").getByRole("link", { name });
+    const wider = await link.evaluate((e) => {
+      const range = document.createRange();
+      range.selectNodeContents(e);
+      return range.getBoundingClientRect().width > e.getBoundingClientRect().width;
+    });
+    if (wider) await expect(link, name).toHaveCSS("overflow-x", "hidden");
+  }
+});
