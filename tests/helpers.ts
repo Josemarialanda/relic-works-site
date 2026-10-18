@@ -1,4 +1,4 @@
-import type { CDPSession, Locator, Page } from "@playwright/test";
+import { expect, type CDPSession, type Locator, type Page } from "@playwright/test";
 
 type Point = { x: number; y: number };
 
@@ -56,4 +56,34 @@ export async function forcePseudoState(page: Page, selector: string, states: ("h
   const { root } = await cdp.send("DOM.getDocument");
   const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector });
   await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: states });
+}
+
+// The footer must be at the bottom of the window when the page is short, and at the end of the page when
+// the page is long. Call it for the project of the spec file: it uses the viewport of that project.
+export async function expectFooterAtBottom(page: Page) {
+  const height = 2400; // taller than the empty bag and the confirmation page, in every layout
+  await page.setViewportSize({ width: page.viewportSize()!.width, height });
+  for (const path of ["/bag", "/checkout/success"]) {
+    await page.goto("/bag");
+    await page.evaluate(() => localStorage.setItem("relic-bag", "[]"));
+    await page.goto(path);
+    const footer = (await page.locator("footer").boundingBox())!;
+    expect(Math.round(footer.y + footer.height), `${path}: the bottom of the footer`).toBe(height);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight), `${path}: no extra scroll`).toBe(height);
+  }
+  // The page for an address that does not exist has the same layout and the same footer position.
+  const missing = await page.goto("/this-page-does-not-exist");
+  expect(missing!.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Page not found." })).toBeVisible();
+  const footer404 = (await page.locator("footer").boundingBox())!;
+  expect(Math.round(footer404.y + footer404.height), "404: the bottom of the footer").toBe(height);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight), "404: no extra scroll").toBe(height);
+
+  // A long page: the footer is at the end of the page, with nothing below it.
+  await page.goto("/shop");
+  const end = await page.evaluate(() => {
+    const f = document.querySelector("footer")!.getBoundingClientRect();
+    return { footerBottom: Math.round(f.bottom + window.scrollY), pageHeight: document.documentElement.scrollHeight };
+  });
+  expect(end.footerBottom, "/shop: the footer is at the end of the page").toBe(end.pageHeight);
 }

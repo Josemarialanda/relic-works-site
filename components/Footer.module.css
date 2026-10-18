@@ -1,4 +1,4 @@
-.footer { display: grid; grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); gap: var(--spacing-20); padding: var(--spacing-40) var(--spacing-20); background: var(--surface-inverted-surface); color: var(--text-inverted); font-size: var(--text-meta); text-transform: uppercase; }
+.footer { margin-top: auto; display: grid; grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); gap: var(--spacing-20); padding: var(--spacing-40) var(--spacing-20); background: var(--surface-inverted-surface); color: var(--text-inverted); font-size: var(--text-meta); text-transform: uppercase; }
 .wordmark { display: block; }
 .logo { display: block; width: auto; height: 28px; }
 .column { display: flex; flex-direction: column; gap: 8px; }

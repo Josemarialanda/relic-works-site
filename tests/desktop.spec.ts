@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { buildOrder } from "../lib/checkout";
-import { heroDots, heroSlide, sizes } from "./helpers";
+import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
 
 // With a mouse, the touch changes must not change the site.
 
@@ -651,4 +651,8 @@ test("the pages have the share image in the metadata, with a full address", asyn
     await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "Relic Works");
   }
   expect((await request.get("/images/brand/og-image.svg")).status()).toBe(200);
+});
+
+test("the footer is at the bottom of the window on a short page, and at the end of a long page", async ({ page }) => {
+  await expectFooterAtBottom(page);
 });

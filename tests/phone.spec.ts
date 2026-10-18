@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { forcePseudoState, heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
+import { expectFooterAtBottom, forcePseudoState, heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
 
 const MIN_TARGET = 44;
 
@@ -278,4 +278,8 @@ test.describe("stem calculator", () => {
 test("the bespoke page does not scroll sideways", async ({ page }) => {
   await page.goto("/bespoke");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+});
+
+test("the footer is at the bottom of the window on a short page, and at the end of a long page", async ({ page }) => {
+  await expectFooterAtBottom(page);
 });

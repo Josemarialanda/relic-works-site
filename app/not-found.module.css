@@ -1,0 +1,5 @@
+.body { padding: var(--spacing-80) var(--spacing-20); align-items: flex-start; }
+.lead { max-width: 560px; }
+/* The same layout as the buttons of the empty bag: side by side when there is space, else stacked. */
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--spacing-12); width: 100%; max-width: calc(2 * 240px + var(--spacing-12)); }
+.actions > * { height: auto; min-height: 60px; padding: 8px var(--spacing-12); white-space: normal; text-align: center; overflow: hidden; }

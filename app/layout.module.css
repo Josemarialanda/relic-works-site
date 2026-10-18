@@ -1,1 +1,3 @@
-.page { max-width: var(--page-max); margin: 0 auto; background: var(--surface-page-canvas); color: var(--text-primary); }
+/* The page is at least as high as the window, and the footer takes the extra space above it (see
+   .footer), so on a short page the footer is at the bottom of the window, not under the content. */
+.page { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; max-width: var(--page-max); margin: 0 auto; background: var(--surface-page-canvas); color: var(--text-primary); }
