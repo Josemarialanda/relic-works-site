@@ -258,6 +258,8 @@ test("the stem calculator keeps its height when the result needs more lines", as
 test.describe("images", () => {
   for (const path of ["/", "/shop", "/bespoke", "/bag", "/workshop"]) {
     test(`all images on ${path} load`, async ({ page }) => {
+      // The bag is empty on a first visit, so the bag page needs items to show their images.
+      if (path === "/bag") await saveBag(page, DEMO_BAG);
       await page.goto(path);
       const imgs = page.locator("main img, section img");
       expect(await imgs.count()).toBeGreaterThan(0);
@@ -424,6 +426,14 @@ async function saveBag(page: import("@playwright/test").Page, items: object[]) {
   await page.reload();
 }
 
+// A bag with three lines (4 items): a stem, a bespoke stem and two caps. The bag is empty on a first visit.
+const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" };
+const DEMO_BAG = [
+  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.jpg" },
+  { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 600, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM },
+  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.jpg" },
+];
+
 test.describe("checkout order check (server rules)", () => {
   const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Painted", color: "Green", height: "40 mm", length: "90 mm", angle: "±6°" };
 
@@ -510,7 +520,7 @@ test.describe("bag checkout", () => {
       body = route.request().postDataJSON();
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
     });
-    await page.goto("/bag");
+    await saveBag(page, DEMO_BAG);
     await page.getByRole("button", { name: "Checkout" }).click();
     await page.waitForURL("**/support");
 
@@ -525,7 +535,7 @@ test.describe("bag checkout", () => {
 
   test("it shows the error of the server and lets the customer try again", async ({ page }) => {
     await page.route("**/api/checkout", (route) => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Checkout is not available yet." }) }));
-    await page.goto("/bag");
+    await saveBag(page, DEMO_BAG);
     const checkout = page.getByRole("button", { name: "Checkout" });
     await checkout.click();
     await expect(page.locator("aside").getByRole("alert")).toHaveText("Checkout is not available yet.");
@@ -539,7 +549,7 @@ test.describe("bag checkout", () => {
       await new Promise((r) => setTimeout(r, 300));
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
     });
-    await page.goto("/bag");
+    await saveBag(page, DEMO_BAG);
     await page.getByRole("button", { name: "Checkout" }).dblclick();
     await page.waitForURL("**/support");
     expect(calls).toBe(1);
@@ -585,6 +595,15 @@ test.describe("bag checkout", () => {
     await expect(page.locator("main")).toContainText("1 items");
   });
 
+  test("the bag is empty on a first visit", async ({ page }) => {
+    await page.goto("/");
+    expect(await page.evaluate(() => localStorage.getItem("relic-bag"))).toBeNull();
+    await expect(page.getByRole("link", { name: /^Bag \(0\)$/i })).toBeVisible();
+    await page.goto("/bag");
+    await expect(page.getByText("Your bag is empty.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Checkout" })).toBeDisabled();
+  });
+
   test("the plus button stops at 20 of one item", async ({ page }) => {
     await saveBag(page, [{ ...FLAT_CAP, qty: 19 }]);
     const plus = page.getByRole("button", { name: "Add one Flat Cap" });
@@ -601,6 +620,7 @@ test.describe("bag checkout", () => {
 
 test.describe("order confirmation", () => {
   test("it does not confirm an order that Stripe has not confirmed, and it keeps the bag", async ({ page }) => {
+    await saveBag(page, DEMO_BAG);
     await page.goto("/checkout/success");
     await expect(page.getByText("We could not confirm a payment.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Thank you." })).toHaveCount(0);

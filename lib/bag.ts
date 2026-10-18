@@ -19,7 +19,6 @@ export type BagItem = {
 const STORAGE_KEY = "relic-bag";
 const CHANGE_EVENT = "relicbag";
 
-// Demo contents for a first visit, as in the design.
 // The bag item of a bespoke part. The price is for display: the server prices it again.
 export function bespokeBagItem(config: BespokeConfig): Omit<BagItem, "qty"> {
   const spec = bespokeSpec(config);
@@ -33,15 +32,6 @@ export function bespokeBagItem(config: BespokeConfig): Omit<BagItem, "qty"> {
     bespoke: config,
   };
 }
-
-const SEED: BagItem[] = [
-  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.jpg" },
-  {
-    ...bespokeBagItem({ part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" }),
-    qty: 1,
-  },
-  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.jpg" },
-];
 
 const EMPTY: BagItem[] = [];
 
@@ -83,7 +73,7 @@ function read(): BagItem[] {
   if (raw === cachedRaw) return cachedItems;
   cachedRaw = raw;
   if (raw === null) {
-    cachedItems = SEED;
+    cachedItems = EMPTY;
   } else {
     try {
       const parsed: unknown = JSON.parse(raw);
