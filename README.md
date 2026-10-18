@@ -44,6 +44,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 - `app/api/checkout/route.ts`: starts a Stripe payment. `app/checkout/success/` is the page after payment.
 - `public/`: images, icons and fonts, in one folder for each kind and page. See `public/README.md`.
 - `scripts/mock-images.mjs`: draws the mock product images in `public/images`. Run it with `npm run images`.
+- `scripts/make-logo.py`: draws the logo SVG files in `public/images/brand` from the Inter font, with a blackletter "R" and "W" from UnifrakturCook. The command to run it is at the top of the file.
 
 ## Checkout
 

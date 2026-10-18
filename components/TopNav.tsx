@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { bagCount, useBag } from "@/lib/bag";
@@ -22,7 +23,8 @@ export function TopNav() {
   return (
     <header className={styles.nav}>
       <Link className={styles.brand} href="/">
-        Relic Works
+        {/* The logo is an SVG with the letters as outlines. Its alt text is the link name. */}
+        <Image className={styles.logo} src="/images/brand/logo.svg" alt="Relic Works" width={188} height={28} priority />
       </Link>
       <nav className={styles.links}>
         {LINKS.map((l) => (

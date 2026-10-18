@@ -1,12 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
-import { cx } from "@/lib/cx";
 import styles from "./Footer.module.css";
 
 // Hash links use <a> so that the target page gets a native hashchange event.
 export function Footer() {
   return (
     <footer className={styles.footer}>
-      <span className={cx("subheading", styles.wordmark)}>Relic Works</span>
+      <span className={styles.wordmark}>
+        <Image className={styles.logo} src="/images/brand/logo-white.svg" alt="Relic Works" width={188} height={28} />
+      </span>
       <div className={styles.column}>
         <Link href="/shop">Shop</Link>
         <a href="/shop#Stems">Stems</a>
