@@ -16,7 +16,7 @@ import button from "./ui/button.module.css";
 export function Bag() {
   const items = useBag();
   const zoneSelectId = useId();
-  const [zoneId, setZoneId] = useState<ZoneId>("uk");
+  const [zoneId, setZoneId] = useState<ZoneId>(ZONES[0].id);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

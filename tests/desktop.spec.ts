@@ -1,4 +1,12 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import bespokeJson from "../data/bespoke.json";
+import { PART_IDS, parseBespokeData } from "../data/bespoke";
+import productsJson from "../data/products.json";
+import { parseProducts } from "../data/products";
+import shippingJson from "../data/shipping.json";
+import { parseZones } from "../data/shipping";
 import { buildOrder } from "../lib/checkout";
 import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
 
@@ -655,4 +663,82 @@ test("the pages have the share image in the metadata, with a full address", asyn
 
 test("the footer is at the bottom of the window on a short page, and at the end of a long page", async ({ page }) => {
   await expectFooterAtBottom(page);
+});
+
+// ---- The JSON data files ----
+
+test.describe("data files", () => {
+  const clone = <T>(v: T): T => structuredClone(v);
+
+  test("the products, zones and bespoke options are valid", () => {
+    // The files are checked when they load, so this runs only if the real data is valid.
+    expect(parseProducts(productsJson).products).toHaveLength(6);
+    expect(parseZones(shippingJson).map((z) => z.id)).toEqual(["uk", "europe", "world"]);
+    expect(parseBespokeData(bespokeJson).defaults.material).toBe("Steel");
+  });
+
+  test("every product image is a file in public/images", () => {
+    const paths = [...parseProducts(productsJson).products.map((p) => p.image), ...PART_IDS.map((id) => `/images/bespoke/${id}.svg`)];
+    for (const path of paths) expect(existsSync(join("public", path)), path).toBe(true);
+  });
+
+  test("every price is a whole number of pence, so Stripe accepts it", () => {
+    for (const p of parseProducts(productsJson).products) {
+      const r = buildOrder({ zone: "uk", items: [{ name: p.name, qty: 1 }] });
+      expect(r.ok && Number.isInteger(r.order.lines[0].unitAmount), p.name).toBe(true);
+    }
+  });
+
+  test("a product with a price such as 19.99 gives whole pence", () => {
+    // 19.99 * 100 is 1998.9999999999998 in floating-point numbers.
+    expect(19.99 * 100).not.toBe(1999);
+    const data = clone(productsJson);
+    data.products[4].price = 19.99;
+    expect(parseProducts(data).products[4].price).toBe(19.99);
+    expect(Math.round(19.99 * 100)).toBe(1999);
+  });
+
+  test("a wrong product is refused, and the message names the file and the field", () => {
+    const bad = (change: (d: typeof productsJson) => void) => {
+      const d = clone(productsJson);
+      change(d);
+      return () => parseProducts(d);
+    };
+    expect(bad((d) => (d.products[1].name = d.products[0].name))).toThrow(/products\.json: products\[1\]\.name: "Quill Stem" is used by more than one product/);
+    expect(bad((d) => (d.products[0].category = "Bikes"))).toThrow(/products\[0\]\.category: "Bikes" is not one of: Stems, Spacers, Caps/);
+    expect(bad((d) => (d.products[0].price = 0))).toThrow(/products\[0\]\.price: must be a number above 0/);
+    expect(bad((d) => (d.products[0].price = 19.999))).toThrow(/products\[0\]\.price: must have at most 2 decimal places/);
+    expect(bad((d) => (d.products[0].image = "shop/a.svg"))).toThrow(/products\[0\]\.image: must be a path in public\/images/);
+    expect(bad((d) => (d.products = d.products.filter((p) => p.category !== "Caps")))).toThrow(/the category "Caps" has no product/);
+    expect(() => parseProducts({})).toThrow(/products\.json: categories: must be a list/);
+  });
+
+  test("a wrong delivery zone is refused", () => {
+    const bad = (change: (d: typeof shippingJson) => void) => {
+      const d = clone(shippingJson);
+      change(d);
+      return () => parseZones(d);
+    };
+    expect(bad((d) => (d.zones[1].id = "uk"))).toThrow(/zones\[1\]\.id: "uk" is used by more than one zone/);
+    expect(bad((d) => (d.zones[0].price = -1))).toThrow(/zones\[0\]\.price: must be a number of 0/);
+    expect(bad((d) => (d.zones[0].countries = ["gb"]))).toThrow(/must be a two-letter country code in capitals/);
+    expect(bad((d) => d.zones[2].countries.push("GB"))).toThrow(/GB is in the zone "uk" and in the zone "world"/);
+    expect(bad((d) => (d.zones = []))).toThrow(/zones: must have at least one zone/);
+  });
+
+  test("a wrong bespoke option is refused, and the names that the code needs must stay", () => {
+    const bad = (change: (d: typeof bespokeJson) => void) => {
+      const d = clone(bespokeJson);
+      change(d);
+      return () => parseBespokeData(d);
+    };
+    expect(bad((d) => Object.assign(d.parts.caps.type, { options: ["Spacer cap"], initial: "Spacer cap" }))).toThrow(/parts\.caps\.type\.options: must include "Flat cap"/);
+    expect(bad((d) => Object.assign(d, { materials: ["Titanium", "Aluminium"], defaults: { ...d.defaults, material: "Titanium" } }))).toThrow(/materials: must include "Steel"/);
+    expect(bad((d) => (d.defaults.color = "Pink"))).toThrow(/defaults\.color: "Pink" is not one of/);
+    expect(bad((d) => (d.parts.stems.type.initial = "Nope"))).toThrow(/parts\.stems\.type\.initial/);
+    expect(bad((d) => (d.colors[0].hex = "blue"))).toThrow(/colors\[0\]\.hex: "blue" must be a colour such as #1f7a3d/);
+    expect(bad((d) => delete (d.pricing.materialFactor as Record<string, number>).Titanium)).toThrow(/pricing\.materialFactor\.Titanium: must be a number above 0/);
+    expect(bad((d) => (d.customRange.length = [150, 40]))).toThrow(/customRange\.length: must be two numbers, the lowest first/);
+    expect(bad((d) => (d.parts.stems.basePrice = 0))).toThrow(/parts\.stems\.basePrice/);
+  });
 });

@@ -1,0 +1,13 @@
+{
+  "categories": ["Stems", "Spacers", "Caps"],
+  "materials": ["Steel", "Titanium", "Aluminium"],
+  "finishes": ["Raw", "Brushed", "Painted", "Polished"],
+  "products": [
+    { "name": "Quill Stem", "category": "Stems", "material": "Steel", "finish": "Raw", "price": 210, "image": "/images/shop/quill-stem.svg" },
+    { "name": "Threadless Stem", "category": "Stems", "material": "Steel", "finish": "Painted", "price": 185, "image": "/images/shop/threadless-stem.svg" },
+    { "name": "1\" Spacer", "category": "Spacers", "material": "Aluminium", "finish": "Brushed", "price": 24, "image": "/images/shop/spacer-1in.svg" },
+    { "name": "1 1/8\" Spacer", "category": "Spacers", "material": "Aluminium", "finish": "Polished", "price": 28, "image": "/images/shop/spacer-1-1-8in.svg" },
+    { "name": "Flat Cap", "category": "Caps", "material": "Aluminium", "finish": "Painted", "price": 32, "image": "/images/shop/flat-cap.svg" },
+    { "name": "Spacer Cap", "category": "Caps", "material": "Titanium", "finish": "Raw", "price": 38, "image": "/images/shop/spacer-cap.svg" }
+  ]
+}

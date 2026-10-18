@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { addToBag, bespokeBagItem } from "@/lib/bag";
-import { ANGLES, BASE_PRICE, BONDS, COLORS, CUSTOM_RANGE, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
+import { ANGLES, BASE_PRICE, BONDS, COLORS, CUSTOM_RANGE, DEFAULTS, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
 import { parseBespoke, type BespokeConfig } from "@/lib/bespoke";
 import { cx } from "@/lib/cx";
 import { gbp } from "@/lib/money";
@@ -54,14 +54,14 @@ function CustomInput({ placeholder, unit, value, onChange }: { placeholder: stri
 
 export function Bespoke() {
   const [part, setPart] = useState<PartId>("stems");
-  const [material, setMaterial] = useState("Steel");
-  const [bond, setBond] = useState("Brazed");
+  const [material, setMaterial] = useState(DEFAULTS.material);
+  const [bond, setBond] = useState(DEFAULTS.bond);
   const [types, setTypes] = useState<Record<PartId, string>>({ stems: TYPES.stems.initial, spacers: TYPES.spacers.initial, caps: TYPES.caps.initial });
   const [heights, setHeights] = useState<Record<PartId, string>>({ stems: HEIGHTS.stems.initial, spacers: HEIGHTS.spacers.initial, caps: HEIGHTS.caps.initial });
-  const [length, setLength] = useState("90 mm");
-  const [angle, setAngle] = useState("±6°");
-  const [finish, setFinish] = useState("Painted");
-  const [color, setColor] = useState("Green");
+  const [length, setLength] = useState(DEFAULTS.length);
+  const [angle, setAngle] = useState(DEFAULTS.angle);
+  const [finish, setFinish] = useState(DEFAULTS.finish);
+  const [color, setColor] = useState(DEFAULTS.color);
   const [custom, setCustom] = useState({ height: "", length: "", angle: "" });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   // The key of the part that was added last, so the message goes when the options change.

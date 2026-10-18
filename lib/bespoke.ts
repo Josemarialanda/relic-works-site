@@ -1,6 +1,6 @@
 // The check of a bespoke order, its price and its description. The bespoke page, the bag and the checkout
 // server all use this file. The server calls parseBespoke and bespokePrice on the data that the browser
-// sends, so a price in the browser is never trusted. The options and the price rules are in data/bespoke.ts.
+// sends, so a price in the browser is never trusted. The options and the price rules are in data/bespoke.json.
 
 import {
   ANGLES,

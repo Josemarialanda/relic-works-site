@@ -37,7 +37,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 
 - `app/`: the pages (home, shop, bespoke, bag, workshop, support).
 - `components/`: the React components, each with a CSS module.
-- `data/`: the data that you edit to change the shop: products and prices, bespoke options and price rules, and delivery zones. See `data/README.md`.
+- `data/`: the JSON files that you edit to change the shop: products and prices, bespoke options and price rules, and delivery zones. The build checks them. See `data/README.md`.
 - `lib/catalog.ts`: functions that read the product data.
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
 - `lib/checkout.ts`, `lib/bespoke.ts`, `lib/shipping.ts`: the order check, the bespoke check and price, and the delivery price. The browser and the server both use them. See Checkout below.
@@ -59,8 +59,8 @@ To set it up:
 
 Before you go live, check these placeholders and open points:
 
-- **Bespoke prices.** The rules in `data/bespoke.ts` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
-- **Delivery.** The prices and the countries of each zone are in `data/shipping.ts`. The support page and the bag read the same file.
+- **Bespoke prices.** The rules in `data/bespoke.json` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
+- **Delivery.** The prices and the countries of each zone are in `data/shipping.json`. The support page and the bag read the same file.
 - **Tax and duties.** The checkout does not calculate VAT or import duties. The prices are the prices that the customer pays.
 - **Orders and stock.** There is no webhook, so the site does not send you an email, and it does not track stock. Add a Stripe webhook (`checkout.session.completed`) when you want either.
 - **Site address and share image.** Set `NEXT_PUBLIC_SITE_URL` in the production environment (see `.env.example`). The share image (`public/images/brand/og-image.svg`) needs a full address. Most apps (Facebook, X, LinkedIn, WhatsApp, iMessage) do **not** show an SVG: replace it with a PNG or JPG of 1200×630 and change `SHARE_IMAGE` in `app/layout.tsx`.

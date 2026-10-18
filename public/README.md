@@ -14,7 +14,7 @@ Put an image that only one component imports next to that component instead, and
 | `fonts/` | Self-hosted font files. The site uses `next/font/google` today. |
 
 The home and workshop pages each have a copy of the collage images, so you can change one page and not the other.
-The pages set the paths: `data/products.ts` for products, and the data arrays at the top of each page or component for the rest.
+The pages set the paths: `data/products.json` for products, and the data arrays at the top of each page or component for the rest.
 
 ## Rules
 

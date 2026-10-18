@@ -54,7 +54,7 @@ export function buildOrder(payload: unknown): OrderResult {
       lines.push({
         name: `Bespoke ${PART_NAME[config.part]}`,
         description: `${bespokeSpec(config)}. Made to order: ships in 3–4 weeks.`,
-        unitAmount: bespokePrice(config) * 100,
+        unitAmount: Math.round(bespokePrice(config) * 100),
         quantity: qty,
         bespoke: config,
       });
@@ -63,7 +63,9 @@ export function buildOrder(payload: unknown): OrderResult {
 
     const product = typeof name === "string" ? productByName(name) : undefined;
     if (!product) return fail("A product in your bag is not for sale now. Remove it and try again.");
-    lines.push({ name: product.name, description: `${product.mat} · ${product.fin}`, unitAmount: product.price * 100, quantity: qty });
+    // Round, because a price such as 19.99 times 100 is not exactly 1999 as a floating-point number, and Stripe needs whole pence.
+    const unitAmount = Math.round(product.price * 100);
+    lines.push({ name: product.name, description: `${product.mat} · ${product.fin}`, unitAmount, quantity: qty });
   }
 
   const subtotal = lines.reduce((sum, l) => sum + (l.unitAmount / 100) * l.quantity, 0);
