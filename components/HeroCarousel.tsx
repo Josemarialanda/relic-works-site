@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { fromPrice } from "@/lib/catalog";
@@ -75,7 +76,8 @@ export function HeroCarousel() {
           Configure your own
         </Link>
       </div>
-      <div className={cx("poster", styles.poster)}>Relic Works</div>
+      {/* The logo has the letters as outlines, so the R and the W are the same as in the navigation. */}
+      <Image className={styles.logo} src="/images/brand/logo.svg" alt="Relic Works" width={188} height={28} priority />
     </section>
   );
 }

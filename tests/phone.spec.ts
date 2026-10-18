@@ -83,7 +83,7 @@ test.describe("hero layout", () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/");
       const hero = page.locator("section").first();
-      const poster = (await hero.locator(".poster").boundingBox())!;
+      const poster = (await hero.locator("img[alt='Relic Works']").boundingBox())!;
       const ctas = await Promise.all((await hero.locator("a").all()).map(async (a) => (await a.boundingBox())!));
       for (const dot of await heroDots(page).all()) {
         const d = (await dot.boundingBox())!;

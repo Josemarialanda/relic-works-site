@@ -1,28 +1,26 @@
 /* pan-y: a vertical drag scrolls the page, a horizontal drag is a swipe. */
-.hero { position: relative; height: 720px; overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; }
+/* The logo is two thirds as wide as the hero, so it ends at the second column line of the rows below. --logo-h is its height (the logo is 6.71 times as wide as it is high).
+   The dots and the CTAs sit above it. A dot has a 44px tap area, so the dots have their own row between the logo and the CTAs. */
+.hero { --logo-left: var(--spacing-20); --logo-w: calc(66.667cqw - var(--logo-left)); --logo-h: calc(var(--logo-w) / 6.71); container-type: inline-size; position: relative; height: 720px; overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; }
 .slide { position: absolute; inset: 0; transition: opacity 200ms linear; }
 .kicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-4); }
 .kickerMeta { font-weight: var(--font-weight-regular); }
-.dots { position: absolute; right: var(--spacing-20); bottom: var(--spacing-24); z-index: 2; }
+.dots { position: absolute; right: var(--spacing-20); bottom: calc(var(--logo-h) + 44px); z-index: 2; }
 /* Two equal columns: both buttons are as wide as the wider one. */
-.ctas { position: absolute; left: var(--spacing-20); bottom: 190px; display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-12); z-index: 2; }
+.ctas { position: absolute; left: var(--spacing-20); bottom: calc(var(--logo-h) + var(--spacing-24) + 52px); display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-12); z-index: 2; }
 .ctaLabels { display: grid; }
 .ctaLabels > * { grid-area: 1 / 1; }
 .ctaHidden { visibility: hidden; }
-.poster { position: absolute; left: 16px; bottom: var(--spacing-12); }
+.logo { position: absolute; left: var(--logo-left); bottom: var(--spacing-24); display: block; width: var(--logo-w); height: var(--logo-h); }
 
 /* Tablet */
 @media (max-width: 1023px) {
   .hero { height: 640px; }
 }
 
-/* Phone: the poster is almost full width, so the dots go above it, not next to it.
-   The poster is 14vw high (the .poster text role), so the dots and CTAs use 14vw too. */
+/* Phone */
 @media (max-width: 767px) {
-  .hero { height: 560px; }
-  .dots { bottom: calc(var(--spacing-12) + 14vw + var(--spacing-24)); }
-  .ctas { bottom: calc(14vw + 100px); }
-  .poster { left: var(--spacing-12); }
+  .hero { --logo-left: var(--spacing-12); height: 560px; }
 }
 
 /* Narrow phone: the two buttons do not fit side by side, so they stack. */
