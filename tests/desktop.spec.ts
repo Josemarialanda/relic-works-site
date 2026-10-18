@@ -275,14 +275,14 @@ test.describe("images", () => {
       await page.goto(path);
       const srcs = await page.locator("button[title^='View'] img").evaluateAll((els) => els.map((e) => e.getAttribute("src")));
       expect(srcs.length).toBe(6);
-      for (const src of srcs) expect(src).toContain(`${folder}collage-`);
+      for (const src of srcs) expect(decodeURIComponent(src!)).toContain(`${folder}collage-`);
     }
   });
 
   test("the lightbox shows the photo of the tile", async ({ page }) => {
     await page.goto("/workshop");
     await page.locator("button[title='View Flat Cap']").click();
-    await expect(page.locator("img[src='/images/workshop/collage-flat-cap.svg']")).toHaveCount(2);
+    await expect(page.locator("img[src*='workshop%2Fcollage-flat-cap.jpg']")).toHaveCount(2);
   });
 });
 
@@ -678,7 +678,7 @@ test.describe("data files", () => {
   });
 
   test("every product image is a file in public/images", () => {
-    const paths = [...parseProducts(productsJson).products.map((p) => p.image), ...PART_IDS.map((id) => `/images/bespoke/${id}.svg`)];
+    const paths = [...parseProducts(productsJson).products.map((p) => p.image), ...PART_IDS.map((id) => `/images/bespoke/${id}.jpg`)];
     for (const path of paths) expect(existsSync(join("public", path)), path).toBe(true);
   });
 

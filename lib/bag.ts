@@ -29,18 +29,18 @@ export function bespokeBagItem(config: BespokeConfig): Omit<BagItem, "qty"> {
     name: `Bespoke ${PART_NAME[config.part]}`,
     spec,
     price: bespokePrice(config),
-    image: `/images/bespoke/${config.part}.svg`,
+    image: `/images/bespoke/${config.part}.jpg`,
     bespoke: config,
   };
 }
 
 const SEED: BagItem[] = [
-  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.svg" },
+  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.jpg" },
   {
     ...bespokeBagItem({ part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" }),
     qty: 1,
   },
-  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.svg" },
+  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.jpg" },
 ];
 
 const EMPTY: BagItem[] = [];

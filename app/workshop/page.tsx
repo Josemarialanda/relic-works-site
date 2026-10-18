@@ -10,9 +10,9 @@ import styles from "./workshop.module.css";
 export const metadata: Metadata = { title: "Workshop" };
 
 const STEPS = [
-  { num: "01", name: "Turned", image: "/images/workshop/process-turned.svg", body: "Bar stock is turned on the lathe into steerer clamps, caps and spacers." },
-  { num: "02", name: "Milled", image: "/images/workshop/process-milled.svg", body: "Bodies and faceplates are CNC milled, then brazed or welded by hand." },
-  { num: "03", name: "Finished", image: "/images/workshop/process-finished.svg", body: "Every part is finished and checked in-house before it ships." },
+  { num: "01", name: "Turned", image: "/images/workshop/process-turned.jpg", body: "Bar stock is turned on the lathe into steerer clamps, caps and spacers." },
+  { num: "02", name: "Milled", image: "/images/workshop/process-milled.jpg", body: "Bodies and faceplates are CNC milled, then brazed or welded by hand." },
+  { num: "03", name: "Finished", image: "/images/workshop/process-finished.jpg", body: "Every part is finished and checked in-house before it ships." },
 ];
 
 const MATERIALS = [
@@ -29,12 +29,12 @@ const FINISHES = [
 ];
 
 const COLLAGE = [
-  { alt: "Quill Stem", src: "/images/workshop/collage-quill-stem.svg", col: "span 2", row: "span 2" },
-  { alt: "Threadless Stem", src: "/images/workshop/collage-threadless-stem.svg" },
-  { alt: "Flat Cap", src: "/images/workshop/collage-flat-cap.svg" },
-  { alt: "Spacer Cap", src: "/images/workshop/collage-spacer-cap.svg", col: "span 2" },
-  { alt: `1 1/8" Spacer`, src: "/images/workshop/collage-spacer-1-1-8in.svg", col: "span 2" },
-  { alt: `1" Spacer`, src: "/images/workshop/collage-spacer-1in.svg", col: "span 2" },
+  { alt: "Quill Stem", src: "/images/workshop/collage-quill-stem.jpg", col: "span 2", row: "span 2" },
+  { alt: "Threadless Stem", src: "/images/workshop/collage-threadless-stem.jpg" },
+  { alt: "Flat Cap", src: "/images/workshop/collage-flat-cap.jpg" },
+  { alt: "Spacer Cap", src: "/images/workshop/collage-spacer-cap.jpg", col: "span 2" },
+  { alt: `1 1/8" Spacer`, src: "/images/workshop/collage-spacer-1-1-8in.jpg", col: "span 2" },
+  { alt: `1" Spacer`, src: "/images/workshop/collage-spacer-1in.jpg", col: "span 2" },
 ];
 
 function NoteList({ title, items }: { title: string; items: { name: string; note: string }[] }) {
@@ -57,7 +57,7 @@ export default function WorkshopPage() {
   return (
     <main>
       <section className={styles.hero}>
-        <Photo src="/images/workshop/hero.svg" alt="Quill Stem held in the workshop" preload fill />
+        <Photo src="/images/workshop/hero.jpg" alt="Quill Stem held in the workshop" preload fill />
         <span className={cx("meta-b", styles.heroKicker)}>Turned, milled and finished in the UK</span>
         <div className={cx("poster", styles.heroPoster)}>The workshop.</div>
       </section>

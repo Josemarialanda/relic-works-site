@@ -16,18 +16,18 @@ const PROMISES = [
 ];
 
 const CATEGORIES = [
-  { name: "Stems", meta: `From £${fromPrice("Stems")}`, image: "/images/home/category-stems.svg" },
-  { name: "Spacers", meta: `From £${fromPrice("Spacers")}`, image: "/images/home/category-spacers.svg" },
-  { name: "Caps", meta: `From £${fromPrice("Caps")}`, image: "/images/home/category-caps.svg" },
+  { name: "Stems", meta: `From £${fromPrice("Stems")}`, image: "/images/home/category-stems.jpg" },
+  { name: "Spacers", meta: `From £${fromPrice("Spacers")}`, image: "/images/home/category-spacers.jpg" },
+  { name: "Caps", meta: `From £${fromPrice("Caps")}`, image: "/images/home/category-caps.jpg" },
 ];
 
 const COLLAGE = [
-  { alt: "Quill Stem", src: "/images/home/collage-quill-stem.svg", col: "span 2", row: "span 2" },
-  { alt: "Threadless Stem", src: "/images/home/collage-threadless-stem.svg" },
-  { alt: "Flat Cap", src: "/images/home/collage-flat-cap.svg" },
-  { alt: "Spacer Cap", src: "/images/home/collage-spacer-cap.svg" },
-  { alt: `1 1/8" Spacer`, src: "/images/home/collage-spacer-1-1-8in.svg" },
-  { alt: `1" Spacer`, src: "/images/home/collage-spacer-1in.svg" },
+  { alt: "Quill Stem", src: "/images/home/collage-quill-stem.jpg", col: "span 2", row: "span 2" },
+  { alt: "Threadless Stem", src: "/images/home/collage-threadless-stem.jpg" },
+  { alt: "Flat Cap", src: "/images/home/collage-flat-cap.jpg" },
+  { alt: "Spacer Cap", src: "/images/home/collage-spacer-cap.jpg" },
+  { alt: `1 1/8" Spacer`, src: "/images/home/collage-spacer-1-1-8in.jpg" },
+  { alt: `1" Spacer`, src: "/images/home/collage-spacer-1in.jpg" },
 ];
 
 export default function HomePage() {
@@ -80,7 +80,7 @@ export default function HomePage() {
         <NewsRotator />
         <div className={layout.stack}>
           <div className={cx(layout.ruleB, styles.newsPhoto)}>
-            <Photo src="/images/home/news.svg" alt="Parts on the workshop bench" sizes="(max-width: 767px) 100vw, 50vw" fill />
+            <Photo src="/images/home/news.jpg" alt="Parts on the workshop bench" sizes="(max-width: 767px) 100vw, 50vw" fill />
           </div>
           <NewsletterForm />
         </div>

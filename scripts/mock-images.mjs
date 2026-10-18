@@ -210,9 +210,5 @@ out["bespoke/stems.svg"] = doc(1200, 1500, P("threadless-stem", 600, 760, 1000, 
 out["bespoke/spacers.svg"] = doc(1200, 1500, fit(stack(500, 780, 270, [[30, "polished"], [70, "green"], [24, "brushed"], [50, "red"], [24, "polished"], [40, "black"]], 0.56), [200, 380, 820, 880], 600, 760, 900, 900));
 out["bespoke/caps.svg"] = doc(1200, 1500, P("spacer-cap", 600, 760, 900, 800));
 
-// Social share image: the wordmark and a stem.
-out["brand/og-image.svg"] = doc(1200, 630, `<text x="70" y="330" font-family="Inter, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="110" letter-spacing="-4" fill="#000">Relic Works</text>
-  <text x="74" y="390" font-family="Inter, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="24" letter-spacing="2" fill="#333">STEMS · SPACERS · CAPS — MADE IN THE UK</text>` + P("threadless-stem", 960, 330, 380, 300));
-
 for (const [path, svg] of Object.entries(out)) writeFileSync(new URL(path, IMAGES), svg);
 console.log(Object.keys(out).length, "files");

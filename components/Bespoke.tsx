@@ -14,9 +14,9 @@ import { StemCalculator } from "./StemCalculator";
 import button from "./ui/button.module.css";
 
 const PARTS: { id: PartId; label: string; image: string; headline: string; body: string }[] = [
-  { id: "stems", label: "Stems", image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
-  { id: "spacers", label: "Spacers", image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Choose your steerer size, set each spacer height, choose a finish per piece and mix colours across the stack." },
-  { id: "caps", label: "Caps", image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a flat cap or a spacer cap, pick a finish." },
+  { id: "stems", label: "Stems", image: "/images/bespoke/stems.jpg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
+  { id: "spacers", label: "Spacers", image: "/images/bespoke/spacers.jpg", headline: "Your stack, to the millimetre.", body: "Choose your steerer size, set each spacer height, choose a finish per piece and mix colours across the stack." },
+  { id: "caps", label: "Caps", image: "/images/bespoke/caps.jpg", headline: "Your cap. Your mark.", body: "Choose a flat cap or a spacer cap, pick a finish." },
 ];
 
 function isPart(id: string): id is PartId {

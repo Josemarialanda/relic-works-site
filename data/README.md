@@ -26,7 +26,7 @@ To add a product, run `npm run add-product`. The script asks for each field, cop
 You can also add the line by hand:
 
 ```json
-{ "name": "Flat Cap", "category": "Caps", "material": "Aluminium", "finish": "Painted", "price": 32, "image": "/images/shop/flat-cap.svg" }
+{ "name": "Flat Cap", "category": "Caps", "material": "Aluminium", "finish": "Painted", "price": 32, "image": "/images/shop/flat-cap.jpg" }
 ```
 
 - `name` must be different for each product. A saved bag finds a product by its name, so a changed name removes
