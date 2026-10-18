@@ -636,3 +636,19 @@ test.describe("bespoke order", () => {
     await expect(page.locator("main")).toContainText("Flat cap · Steel · Painted Green");
   });
 });
+
+test("the pages have the share image in the metadata, with a full address", async ({ page, request }) => {
+  for (const path of ["/", "/shop", "/bespoke", "/workshop"]) {
+    await page.goto(path);
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    const twitter = await page.locator('meta[name="twitter:image"]').getAttribute("content");
+    // The host depends on NEXT_PUBLIC_SITE_URL, so compare only the path.
+    for (const url of [og, twitter]) {
+      expect(url, path).toMatch(/^https?:\/\//);
+      expect(new URL(url!).pathname, path).toBe("/images/brand/og-image.svg");
+    }
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "Relic Works");
+  }
+  expect((await request.get("/images/brand/og-image.svg")).status()).toBe(200);
+});
