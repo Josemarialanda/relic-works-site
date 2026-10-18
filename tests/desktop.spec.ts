@@ -352,6 +352,15 @@ test("the hero buttons have the same width as each other on every slide", async 
   }
 });
 
+test("the two buttons at the end of the workshop page have the same width", async ({ page }) => {
+  for (const width of [320, 393, 600, 767, 820, 1023, 1280, 1680]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/workshop");
+    const [a, b] = await Promise.all(["Build yours", "Shop the catalog"].map((name) => page.getByRole("link", { name }).boundingBox()));
+    expect(Math.round(a!.width), `at ${width}px`).toBe(Math.round(b!.width));
+  }
+});
+
 test("the empty bag buttons fit in their column and have the same width", async ({ page }) => {
   await page.goto("/bag");
   await page.evaluate(() => localStorage.setItem("relic-bag", "[]"));

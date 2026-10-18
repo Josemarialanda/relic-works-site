@@ -12,7 +12,8 @@
 .noteText { text-align: right; }
 .cta { padding: var(--spacing-60) var(--spacing-20); }
 .ctaBody { padding: var(--spacing-60) var(--spacing-40); justify-content: flex-end; }
-.ctaButtons { display: flex; gap: var(--spacing-12); }
+/* The buttons have the same width. They sit side by side when the column is wide enough, and stack when it is not. */
+.ctaButtons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: var(--spacing-12); width: 100%; max-width: calc(2 * 210px + var(--spacing-12)); }
 
 /* Tablet */
 @media (max-width: 1023px) {
@@ -24,7 +25,6 @@
 @media (max-width: 767px) {
   .hero { height: 420px; }
   .story, .ctaBody { padding: var(--spacing-24) var(--spacing-20); }
-  .ctaButtons { flex-wrap: wrap; }
 }
 
 /* Widescreen */
