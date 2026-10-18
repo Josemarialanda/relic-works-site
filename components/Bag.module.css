@@ -19,6 +19,10 @@
    smaller side padding does not change the normal layout. */
 .emptyActions > * { height: auto; min-height: 60px; padding: 8px var(--spacing-12); white-space: normal; text-align: center; overflow: hidden; }
 
+/* Delivery zone picker */
+.zone { display: flex; flex-direction: column; gap: 8px; }
+.zoneSelect { height: 44px; padding: 0 var(--input-pad); border: var(--rule); border-radius: var(--radius-inputs); font-family: inherit; font-size: var(--text-body); background: var(--color-paper-white); color: var(--text-primary); }
+
 .summaryHead { padding: var(--spacing-24) var(--spacing-20); }
 .totalLabel { font-weight: var(--font-weight-bold); }
 .leadTime { line-height: 1.5; }

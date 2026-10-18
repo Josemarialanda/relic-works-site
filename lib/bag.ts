@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { isProduct } from "./catalog";
+import { PART_NAME, bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
+import { MAX_QTY, productByName } from "./catalog";
+export { gbp } from "./money";
 
 export type BagItem = {
   key: string;
@@ -9,16 +11,34 @@ export type BagItem = {
   price: number;
   qty: number;
   image: string | null;
-  bespoke?: boolean;
+  // The options of a bespoke part. The checkout server prices them again from these options.
+  bespoke?: BespokeConfig;
 };
 
 const STORAGE_KEY = "relic-bag";
 const CHANGE_EVENT = "relicbag";
 
 // Demo contents for a first visit, as in the design.
+// The bag item of a bespoke part. The price is for display: the server prices it again.
+export function bespokeBagItem(config: BespokeConfig): Omit<BagItem, "qty"> {
+  const spec = bespokeSpec(config);
+  return {
+    key: `Bespoke ${config.part}|${spec}`,
+    type: `Bespoke ${PART_NAME[config.part].toLowerCase()}`,
+    name: `Bespoke ${PART_NAME[config.part]}`,
+    spec,
+    price: bespokePrice(config),
+    image: `/images/bespoke/${config.part}.svg`,
+    bespoke: config,
+  };
+}
+
 const SEED: BagItem[] = [
   { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.svg" },
-  { key: "Bespoke Stem|demo", type: "Bespoke stem", name: "Bespoke Stem", spec: "Threadless · Titanium · Polished · 40 mm height · 100 mm · ±17°", price: 290, qty: 1, image: "/images/bespoke/stems.svg", bespoke: true },
+  {
+    ...bespokeBagItem({ part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" }),
+    qty: 1,
+  },
   { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.svg" },
 ];
 
@@ -35,9 +55,17 @@ function isBagItem(v: unknown): v is BagItem {
     typeof i.price === "number" &&
     Number.isInteger(i.qty) &&
     (i.qty as number) > 0 &&
-    // A bag saved earlier can hold a product that the shop no longer sells.
-    (i.bespoke === true || isProduct(i.name as string))
+    // A bag saved earlier can hold a product that the shop no longer sells, or a bespoke part in an
+    // old format.
+    (i.bespoke !== undefined ? parseBespoke(i.bespoke) !== null : productByName(i.name as string) !== undefined)
   );
+}
+
+// The price and quantity that the shop uses now. A saved bag can hold an old price.
+function current(item: BagItem): BagItem {
+  const bespoke = item.bespoke && parseBespoke(item.bespoke);
+  const price = bespoke ? bespokePrice(bespoke) : productByName(item.name)!.price;
+  return { ...item, price, qty: Math.min(item.qty, MAX_QTY), ...(bespoke ? { bespoke } : {}) };
 }
 
 // useSyncExternalStore needs a stable snapshot, so parse only when the raw value changes.
@@ -58,7 +86,7 @@ function read(): BagItem[] {
   } else {
     try {
       const parsed: unknown = JSON.parse(raw);
-      cachedItems = Array.isArray(parsed) ? parsed.filter(isBagItem) : EMPTY;
+      cachedItems = Array.isArray(parsed) ? parsed.filter(isBagItem).map(current) : EMPTY;
     } catch {
       cachedItems = EMPTY;
     }
@@ -100,8 +128,4 @@ export function useBag(): BagItem[] {
 
 export function bagCount(items: BagItem[]): number {
   return items.reduce((a, i) => a + i.qty, 0);
-}
-
-export function gbp(n: number): string {
-  return `£${n.toFixed(2).replace(/\.00$/, "")}`;
 }

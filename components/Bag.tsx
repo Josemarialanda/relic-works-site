@@ -1,28 +1,61 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useId, useState } from "react";
 import { bagCount, gbp, setBag, useBag, type BagItem } from "@/lib/bag";
+import { MAX_QTY } from "@/lib/catalog";
 import { cx } from "@/lib/cx";
+import { shippingCost, zoneById, ZONES, type ZoneId } from "@/lib/shipping";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bag.module.css";
 import { Photo } from "./Photo";
 import { Placeholder } from "./Placeholder";
 import button from "./ui/button.module.css";
 
-const FREE_SHIPPING_FROM = 100;
-const UK_SHIPPING = 6;
-
 export function Bag() {
   const items = useBag();
+  const zoneSelectId = useId();
+  const [zoneId, setZoneId] = useState<ZoneId>("uk");
+  const [paying, setPaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // The browser can show this page again from its cache after the customer comes back from the payment page.
+  useEffect(() => {
+    const reset = (e: PageTransitionEvent) => e.persisted && setPaying(false);
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
 
   const update = (key: string, fn: (i: BagItem) => BagItem) =>
     setBag(items.map((i) => (i.key === key ? fn(i) : i)).filter((i) => i.qty > 0));
 
   const subtotal = items.reduce((a, i) => a + i.price * i.qty, 0);
-  const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_FROM ? 0 : UK_SHIPPING;
+  const zone = zoneById(zoneId)!;
+  const shipping = shippingCost(zone, subtotal);
   const count = bagCount(items);
   const empty = items.length === 0;
   const hasBespoke = items.some((i) => i.bespoke);
+
+  // Send only names, quantities and bespoke options. The server prices the order, so no price goes out.
+  async function checkout() {
+    if (paying) return;
+    setPaying(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ zone: zoneId, items: items.map((i) => (i.bespoke ? { bespoke: i.bespoke, qty: i.qty } : { name: i.name, qty: i.qty })) }),
+      });
+      const data: { url?: string; error?: string } = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) throw new Error(data.error ?? "We could not start the payment. Try again in a moment.");
+      // Stay in the paying state while the browser goes to the payment page.
+      window.location.assign(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We could not start the payment. Try again in a moment.");
+      setPaying(false);
+    }
+  }
 
   return (
     <div className={cx(styles.bag, layout.ruleB)}>
@@ -48,7 +81,7 @@ export function Bag() {
                     −
                   </button>
                   <span className={styles.qtyValue}>{it.qty}</span>
-                  <button type="button" aria-label={`Add one ${it.name}`} onClick={() => update(it.key, (x) => ({ ...x, qty: x.qty + 1 }))}>
+                  <button type="button" aria-label={`Add one ${it.name}`} disabled={it.qty >= MAX_QTY} onClick={() => update(it.key, (x) => ({ ...x, qty: x.qty + 1 }))}>
                     +
                   </button>
                 </div>
@@ -86,14 +119,28 @@ export function Bag() {
               <span>Subtotal</span>
               <span>{gbp(subtotal)}</span>
             </div>
+            <div className={styles.zone}>
+              <label className="meta-b" htmlFor={zoneSelectId}>
+                Deliver to
+              </label>
+              <select id={zoneSelectId} className={styles.zoneSelect} value={zoneId} onChange={(e) => setZoneId(e.target.value as ZoneId)}>
+                {ZONES.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className={layout.between}>
-              <span>UK shipping</span>
+              <span>{zone.label} shipping</span>
               <span>{shipping === 0 ? "Free" : gbp(shipping)}</span>
             </div>
             <span className="meta muted">
-              {subtotal >= FREE_SHIPPING_FROM
-                ? "Free UK delivery applied"
-                : `Spend ${gbp(Math.max(0, FREE_SHIPPING_FROM - subtotal))} more for free UK delivery`}
+              {zone.freeFrom === undefined
+                ? zone.note
+                : subtotal >= zone.freeFrom
+                  ? "Free UK delivery applied"
+                  : `Spend ${gbp(Math.max(0, zone.freeFrom - subtotal))} more for free UK delivery`}
             </span>
           </div>
           <div className={cx(layout.cell, layout.between, layout.ruleB)}>
@@ -101,10 +148,14 @@ export function Bag() {
             <span className="subheading">{gbp(subtotal + shipping)}</span>
           </div>
           <div className={cx(layout.cell, layout.stack, layout.gap12)}>
-            {/* TODO: connect checkout to a payment provider. */}
-            <button type="button" className={cx(button.button, button.block)} disabled={empty}>
-              Checkout
+            <button type="button" className={cx(button.button, button.block)} disabled={empty || paying} onClick={checkout}>
+              {paying ? "Opening payment…" : "Checkout"}
             </button>
+            {error && (
+              <span className="meta" role="alert">
+                {error}
+              </span>
+            )}
             <span className={cx("meta muted", styles.leadTime)}>
               {hasBespoke
                 ? "Bespoke parts are made to order and ship in 3–4 weeks. Catalogue parts ship with them."

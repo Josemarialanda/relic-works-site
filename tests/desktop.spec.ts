@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { buildOrder } from "../lib/checkout";
 import { heroDots, heroSlide, sizes } from "./helpers";
 
 // With a mouse, the touch changes must not change the site.
@@ -394,4 +395,244 @@ test("the empty bag buttons clip a label that cannot fit, so no text shows outsi
     });
     if (wider) await expect(link, name).toHaveCSS("overflow-x", "hidden");
   }
+});
+
+// ---- Checkout ----
+
+const FLAT_CAP = { key: "Flat Cap|Aluminium · Painted", type: "Caps", name: "Flat Cap", spec: "Aluminium · Painted", price: 32, qty: 1, image: null };
+
+async function saveBag(page: import("@playwright/test").Page, items: object[]) {
+  await page.goto("/bag");
+  await page.evaluate((items) => localStorage.setItem("relic-bag", JSON.stringify(items)), items);
+  await page.reload();
+}
+
+test.describe("checkout order check (server rules)", () => {
+  const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Painted", color: "Green", height: "40 mm", length: "90 mm", angle: "±6°" };
+
+  test("it prices catalogue items from the catalog and ignores a price from the browser", () => {
+    const r = buildOrder({ zone: "uk", items: [{ name: "Flat Cap", qty: 2, price: 1, unitAmount: 1 }] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.order.lines).toEqual([{ name: "Flat Cap", description: "Aluminium · Painted", unitAmount: 3200, quantity: 2 }]);
+    expect(r.order.subtotal).toBe(64);
+  });
+
+  test("it prices a bespoke part from its options, and ignores a price and other fields", () => {
+    const r = buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, price: 1 }, qty: 1, price: 1 }] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // 220 × 1 (steel) × (1 + 0.10 brazed + 0.10 painted)
+    expect(r.order.lines[0].unitAmount).toBe(26400);
+    expect(r.order.lines[0].bespoke).toEqual(STEM);
+  });
+
+  test("a custom size costs more, and a custom size out of range is not valid", () => {
+    const custom = buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, length: "95 mm" }, qty: 1 }] });
+    expect(custom.ok && custom.order.lines[0].unitAmount).toBe(Math.round(220 * 1.3) * 100);
+    for (const length of ["39 mm", "151 mm", "abc", "95mm"]) {
+      expect(buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, length }, qty: 1 }] }).ok, length).toBe(false);
+    }
+  });
+
+  test("it rejects what is not valid", () => {
+    const bad: unknown[] = [
+      null,
+      "text",
+      {},
+      { zone: "mars", items: [{ name: "Flat Cap", qty: 1 }] },
+      { zone: "uk", items: [] },
+      { zone: "uk", items: [{ name: "Relic Quill", qty: 1 }] },
+      { zone: "uk", items: [{ name: "Flat Cap", qty: 0 }] },
+      { zone: "uk", items: [{ name: "Flat Cap", qty: 21 }] },
+      { zone: "uk", items: [{ name: "Flat Cap", qty: 1.5 }] },
+      { zone: "uk", items: [{ name: "Flat Cap", qty: "2" }] },
+      { zone: "uk", items: [{ bespoke: { ...STEM, material: "Gold" }, qty: 1 }] },
+      // Brazing is steel only.
+      { zone: "uk", items: [{ bespoke: { ...STEM, material: "Aluminium" }, qty: 1 }] },
+      // A flat cap has no height.
+      { zone: "uk", items: [{ bespoke: { part: "caps", type: "Flat cap", material: "Steel", finish: "Raw", height: "5 mm" }, qty: 1 }] },
+      // Painted needs a colour.
+      { zone: "uk", items: [{ bespoke: { ...STEM, color: undefined }, qty: 1 }] },
+      { zone: "uk", items: Array.from({ length: 51 }, () => ({ name: "Flat Cap", qty: 1 })) },
+    ];
+    for (const payload of bad) expect(buildOrder(payload).ok, JSON.stringify(payload)).toBe(false);
+  });
+
+  test("delivery: UK is free from £100, other zones always have a price", () => {
+    const cost = (zone: string, qty: number) => {
+      const r = buildOrder({ zone, items: [{ name: "Flat Cap", qty }] });
+      return r.ok ? r.order.shipping : NaN;
+    };
+    expect(cost("uk", 3)).toBe(6); // £96
+    expect(cost("uk", 4)).toBe(0); // £128
+    expect(cost("europe", 4)).toBe(15);
+    expect(cost("world", 4)).toBe(25);
+  });
+});
+
+test.describe("checkout API", () => {
+  test("it answers 400 for an order that is not valid, before it talks to Stripe", async ({ request }) => {
+    for (const data of ["not json", "{}", JSON.stringify({ zone: "uk", items: [{ name: "Nothing", qty: 1 }] })]) {
+      const res = await request.post("/api/checkout", { headers: { "content-type": "application/json" }, data });
+      expect(res.status(), data).toBe(400);
+      expect(await res.json()).toHaveProperty("error");
+    }
+  });
+
+  test("it answers 413 for a very large body", async ({ request }) => {
+    const res = await request.post("/api/checkout", { headers: { "content-type": "application/json" }, data: "x".repeat(60_000) });
+    expect(res.status()).toBe(413);
+  });
+});
+
+test.describe("bag checkout", () => {
+  test("it sends names, quantities and bespoke options, with no price, and goes to the payment page", async ({ page }) => {
+    let body: any;
+    await page.route("**/api/checkout", async (route) => {
+      body = route.request().postDataJSON();
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
+    });
+    await page.goto("/bag");
+    await page.getByRole("button", { name: "Checkout" }).click();
+    await page.waitForURL("**/support");
+
+    expect(body.zone).toBe("uk");
+    expect(body.items).toEqual([
+      { name: "Threadless Stem", qty: 1 },
+      { bespoke: { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" }, qty: 1 },
+      { name: "Spacer Cap", qty: 2 },
+    ]);
+    expect(JSON.stringify(body)).not.toMatch(/price|amount/i);
+  });
+
+  test("it shows the error of the server and lets the customer try again", async ({ page }) => {
+    await page.route("**/api/checkout", (route) => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Checkout is not available yet." }) }));
+    await page.goto("/bag");
+    const checkout = page.getByRole("button", { name: "Checkout" });
+    await checkout.click();
+    await expect(page.locator("aside").getByRole("alert")).toHaveText("Checkout is not available yet.");
+    await expect(checkout).toBeEnabled();
+  });
+
+  test("it is off while the payment page opens, so a double click sends one order", async ({ page }) => {
+    let calls = 0;
+    await page.route("**/api/checkout", async (route) => {
+      calls++;
+      await new Promise((r) => setTimeout(r, 300));
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
+    });
+    await page.goto("/bag");
+    await page.getByRole("button", { name: "Checkout" }).dblclick();
+    await page.waitForURL("**/support");
+    expect(calls).toBe(1);
+  });
+
+  test("the delivery zone changes the delivery price and the total", async ({ page }) => {
+    await saveBag(page, [FLAT_CAP]);
+    const summary = page.locator("aside");
+    await expect(summary).toContainText("United Kingdom shipping");
+    await expect(summary).toContainText("£6");
+    await expect(summary).toContainText("£38");
+    await page.getByLabel("Deliver to").selectOption("europe");
+    await expect(summary).toContainText("Europe shipping");
+    await expect(summary).toContainText("£47");
+    await page.getByLabel("Deliver to").selectOption("world");
+    await expect(summary).toContainText("£57");
+  });
+
+  test("the zone is sent to the server", async ({ page }) => {
+    let zone = "";
+    await page.route("**/api/checkout", async (route) => {
+      zone = route.request().postDataJSON().zone;
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
+    });
+    await saveBag(page, [FLAT_CAP]);
+    await page.getByLabel("Deliver to").selectOption("europe");
+    await page.getByRole("button", { name: "Checkout" }).click();
+    await page.waitForURL("**/support");
+    expect(zone).toBe("europe");
+  });
+
+  test("a saved price that is old is replaced by the price of the catalog", async ({ page }) => {
+    await saveBag(page, [{ ...FLAT_CAP, price: 1 }]);
+    await expect(page.locator("main")).toContainText("£32");
+  });
+
+  test("a bespoke part in an old format and a product that is not for sale are dropped", async ({ page }) => {
+    await saveBag(page, [
+      FLAT_CAP,
+      { key: "Bespoke Stem|demo", type: "Bespoke stem", name: "Bespoke Stem", spec: "old", price: 290, qty: 1, image: null, bespoke: true },
+      { key: "Relic Quill|x", type: "Stems", name: "Relic Quill", spec: "x", price: 210, qty: 1, image: null },
+    ]);
+    await expect(page.locator("main")).toContainText("1 items");
+  });
+
+  test("the plus button stops at 20 of one item", async ({ page }) => {
+    await saveBag(page, [{ ...FLAT_CAP, qty: 19 }]);
+    const plus = page.getByRole("button", { name: "Add one Flat Cap" });
+    await plus.click();
+    await expect(plus).toBeDisabled();
+  });
+
+  test("the support page has the same delivery prices as the bag", async ({ page }) => {
+    await page.goto("/support");
+    const shipping = page.locator("#shipping");
+    for (const text of ["United Kingdom", "£6", "Europe", "£15", "Rest of world", "£25"]) await expect(shipping).toContainText(text);
+  });
+});
+
+test.describe("order confirmation", () => {
+  test("it does not confirm an order that Stripe has not confirmed, and it keeps the bag", async ({ page }) => {
+    await page.goto("/checkout/success");
+    await expect(page.getByText("We could not confirm a payment.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Thank you." })).toHaveCount(0);
+    await page.goto("/bag");
+    await expect(page.locator("main")).toContainText("4 items");
+  });
+});
+
+test.describe("bespoke order", () => {
+  test("the price follows the options, and the button adds the part to the bag", async ({ page }) => {
+    await page.goto("/bespoke");
+    const price = page.getByText("Your price").locator("..").locator(".subheading");
+    // Steel, brazed, painted: 220 × 1.2
+    await expect(price).toHaveText("£264");
+    await page.getByRole("button", { name: "Polished", exact: true }).click();
+    await expect(price).toHaveText("£275");
+    await page.getByRole("button", { name: "Titanium", exact: true }).click();
+    // Titanium is not steel, so the bond is welded (no brazing extra): 220 × 1.4 × 1.15
+    await expect(price).toHaveText("£354");
+
+    await page.getByRole("button", { name: "Add to bag" }).click();
+    await expect(page.getByRole("status")).toContainText("Added to your bag");
+    await page.getByRole("link", { name: "View bag" }).click();
+    await expect(page.locator("main")).toContainText("Bespoke Stem");
+    await expect(page.locator("main")).toContainText("Threadless · Titanium · Welded · Polished · 40 mm height · 90 mm · ±6°");
+    await expect(page.locator("main")).toContainText("£354");
+  });
+
+  test("a custom size that is out of range turns the button off and says what the limits are", async ({ page }) => {
+    await page.goto("/bespoke");
+    const add = page.getByRole("button", { name: "Add to bag" });
+    await page.getByRole("button", { name: "Custom" }).nth(1).click(); // the length chips
+    await expect(add).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("length 40–150 mm");
+    await page.getByPlaceholder("e.g. 95").fill("200");
+    await expect(add).toBeDisabled();
+    await page.getByPlaceholder("e.g. 95").fill("95");
+    await expect(add).toBeEnabled();
+  });
+
+  test("a flat cap and a spacer cap are priced from their own options", async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "Caps", exact: true }).click();
+    const price = page.getByText("Your price").locator("..").locator(".subheading");
+    // Steel, painted: 40 × 1.1
+    await expect(price).toHaveText("£44");
+    await page.getByRole("button", { name: "Add to bag" }).click();
+    await page.goto("/bag");
+    await expect(page.locator("main")).toContainText("Bespoke Cap");
+    await expect(page.locator("main")).toContainText("Flat cap · Steel · Painted Green");
+  });
 });

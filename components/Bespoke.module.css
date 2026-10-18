@@ -17,6 +17,9 @@
 .swatch { width: 36px; height: 36px; padding: 0; border: none; border-radius: 50%; outline: 1px solid transparent; outline-offset: 3px; cursor: pointer; }
 .swatch[aria-pressed="true"] { outline-color: var(--color-ink-black); }
 
+/* Price and Add to bag, at the end of the options. */
+.buy { padding-top: var(--spacing-24); }
+
 .custom { display: flex; align-items: center; gap: 8px; }
 .customInput { width: 120px; height: 44px; padding: 0 var(--input-pad); border: var(--rule); border-radius: var(--radius-inputs); font-family: inherit; font-size: var(--text-body); background: var(--color-paper-white); outline: none; }
 

@@ -1,50 +1,40 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { addToBag, bespokeBagItem } from "@/lib/bag";
+import {
+  ANGLES,
+  BASE_PRICE,
+  BONDS,
+  COLORS,
+  CUSTOM_RANGE,
+  FINISHES,
+  HEIGHTS,
+  LENGTHS,
+  MATERIALS,
+  parseBespoke,
+  PART_IDS,
+  TYPES,
+  type BespokeConfig,
+  type PartId,
+} from "@/lib/bespoke";
 import { cx } from "@/lib/cx";
+import { gbp } from "@/lib/money";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bespoke.module.css";
 import { Photo } from "./Photo";
 import { StemCalculator } from "./StemCalculator";
 import button from "./ui/button.module.css";
 
-const PARTS = [
-  { id: "stems", label: "Stems", base: 220, image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
-  { id: "spacers", label: "Spacers", base: 30, image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Choose your steerer size, set each spacer height, choose a finish per piece and mix colours across the stack." },
-  { id: "caps", label: "Caps", base: 40, image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a flat cap or a spacer cap, pick a finish." },
-] as const;
-
-type PartId = (typeof PARTS)[number]["id"];
-
-// The product types that the shop sells, one set for each part.
-const TYPES: Record<PartId, { label: string; options: string[]; initial: string }> = {
-  stems: { label: "Type", options: ["Quill", "Threadless"], initial: "Threadless" },
-  spacers: { label: "Steerer size", options: [`1"`, `1 1/8"`], initial: `1 1/8"` },
-  caps: { label: "Type", options: ["Flat cap", "Spacer cap"], initial: "Flat cap" },
-};
-
-const HEIGHTS: Record<PartId, { label: string; options: string[]; initial: string }> = {
-  stems: { label: "Height", options: ["35 mm", "40 mm", "45 mm", "50 mm", "Custom"], initial: "40 mm" },
-  spacers: { label: "Height", options: ["2.5 mm", "5 mm", "10 mm", "15 mm", "20 mm", "Custom"], initial: "10 mm" },
-  // A spacer cap with no spacer is a flat cap, so there is no 0 mm option.
-  caps: { label: "Integrated spacer height", options: ["5 mm", "10 mm", "15 mm", "Custom"], initial: "5 mm" },
-};
-
-const MATERIALS = ["Steel", "Titanium", "Aluminium"];
-const BONDS = ["Brazed", "Welded"];
-const FINISHES = ["Raw", "Brushed", "Painted", "Polished"];
-const LENGTHS = ["60 mm", "75 mm", "90 mm", "110 mm", "130 mm", "Custom"];
-const ANGLES = ["±6°", "±17°", "±25°", "±35°", "Custom"];
-const COLORS = [
-  { name: "Blue", hex: "#2f5fa8" },
-  { name: "Red", hex: "#b3262d" },
-  { name: "Orange", hex: "#d9661f" },
-  { name: "Gold", hex: "#c9a24a" },
-  { name: "Green", hex: "#1f7a3d" },
+const PARTS: { id: PartId; label: string; image: string; headline: string; body: string }[] = [
+  { id: "stems", label: "Stems", image: "/images/bespoke/stems.svg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
+  { id: "spacers", label: "Spacers", image: "/images/bespoke/spacers.svg", headline: "Your stack, to the millimetre.", body: "Choose your steerer size, set each spacer height, choose a finish per piece and mix colours across the stack." },
+  { id: "caps", label: "Caps", image: "/images/bespoke/caps.svg", headline: "Your cap. Your mark.", body: "Choose a flat cap or a spacer cap, pick a finish." },
 ];
 
 function isPart(id: string): id is PartId {
-  return PARTS.some((p) => p.id === id);
+  return PART_IDS.includes(id as PartId);
 }
 
 type ChipsProps = { label: React.ReactNode; options: string[]; value: string; onPick: (v: string) => void; isLocked?: (v: string) => boolean };
@@ -88,6 +78,8 @@ export function Bespoke() {
   const [color, setColor] = useState("Green");
   const [custom, setCustom] = useState({ height: "", length: "", angle: "" });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  // The key of the part that was added last, so the message goes when the options change.
+  const [addedKey, setAddedKey] = useState<string | null>(null);
 
   // The URL hash (#stems, #spacers or #caps) selects the part.
   useEffect(() => {
@@ -112,6 +104,31 @@ export function Bespoke() {
   // A flat cap has no integrated spacer, so it has no height to choose.
   const hasHeight = !(part === "caps" && types.caps === "Flat cap");
 
+  // The order that the options make. A custom size is a number that the customer types, so it can be
+  // wrong: parseBespoke then gives null and the button stays off.
+  const customValue = (v: string, unit: string) => (v.trim() === "" ? "" : `${Number(v)}${unit}`);
+  const draft: BespokeConfig = {
+    part,
+    type: types[part],
+    material,
+    finish,
+    ...(finish === "Painted" && { color }),
+    ...(hasHeight && { height: heights[part] === "Custom" ? customValue(custom.height, " mm") : heights[part] }),
+    ...(isStem && {
+      bond: bondLocked ? "Welded" : bond,
+      length: length === "Custom" ? customValue(custom.length, " mm") : length,
+      angle: angle === "Custom" ? customValue(custom.angle, "°") : angle,
+    }),
+  };
+  const config = parseBespoke(draft);
+  const item = config && bespokeBagItem(config);
+  // The limits of the custom sizes that the customer chose, for the message when one is not valid.
+  const limits = [
+    hasHeight && heights[part] === "Custom" && `height ${CUSTOM_RANGE.height[part].join("–")} mm`,
+    isStem && length === "Custom" && `length ${CUSTOM_RANGE.length.join("–")} mm`,
+    isStem && angle === "Custom" && `angle ${CUSTOM_RANGE.angle.join(" to ")}°`,
+  ].filter(Boolean);
+
   return (
     <main>
       <div className={cx("meta", layout.ruleB, styles.tabs)}>
@@ -131,7 +148,7 @@ export function Bespoke() {
         <div className={cx(layout.stack, layout.gap36, styles.options)}>
           <div className={cx(layout.stack, layout.gap12)}>
             <span className="meta-b">
-              Bespoke {bp.label} · From £{bp.base}
+              Bespoke {bp.label} · From {gbp(BASE_PRICE[part])}
             </span>
             <h2 className="heading">{bp.headline}</h2>
             <p className="body-copy muted">{bp.body}</p>
@@ -212,6 +229,36 @@ export function Bespoke() {
               </button>
             </div>
           )}
+
+          <div className={cx(layout.stack, layout.gap12, layout.ruleT, styles.buy)}>
+            <div className={layout.between}>
+              <span className="meta-b">Your price</span>
+              <span className="subheading">{item ? gbp(item.price) : "—"}</span>
+            </div>
+            <button
+              type="button"
+              className={cx(button.button, button.block)}
+              disabled={!item}
+              onClick={() => {
+                if (!item) return;
+                addToBag(item);
+                setAddedKey(item.key);
+              }}
+            >
+              Add to bag
+            </button>
+            <span className="meta muted" role="status">
+              {!item ? (
+                `Enter a custom size inside the limits: ${limits.join(", ")}.`
+              ) : addedKey === item.key ? (
+                <>
+                  Added to your bag. <Link className="link-u" href="/bag">View bag</Link>
+                </>
+              ) : (
+                "Made to order. Ships in 3–4 weeks."
+              )}
+            </span>
+          </div>
         </div>
       </section>
 

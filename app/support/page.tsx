@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fragment } from "react";
 import { SupportNav } from "@/components/SupportNav";
 import { cx } from "@/lib/cx";
+import { gbp } from "@/lib/money";
+import { ZONES } from "@/lib/shipping";
 import layout from "@/styles/layout.module.css";
 import styles from "./support.module.css";
 
@@ -9,11 +11,8 @@ export const metadata: Metadata = { title: "Support" };
 
 const EMAIL = "hello@relicworks.co.uk";
 
-const RATES = [
-  { region: "United Kingdom", price: "£6", note: "Free over £100. 1–2 working days." },
-  { region: "Europe", price: "£15", note: "3–6 working days. Duties prepaid." },
-  { region: "Rest of world", price: "£25", note: "5–10 working days. Duties paid on delivery." },
-];
+// The same zones and prices as the bag and the checkout.
+const RATES = ZONES.map((z) => ({ region: z.label, price: gbp(z.price), note: z.note }));
 
 function DefRows({ rows, className }: { rows: [string, React.ReactNode][]; className?: string }) {
   return (
