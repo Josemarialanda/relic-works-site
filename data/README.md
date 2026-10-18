@@ -22,6 +22,9 @@ uses the data (price rules, totals) is in `lib/`.
 
 ## products.json
 
+To add a product, run `npm run add-product`. The script asks for each field, copies the image, and adds the line.
+You can also add the line by hand:
+
 ```json
 { "name": "Flat Cap", "category": "Caps", "material": "Aluminium", "finish": "Painted", "price": 32, "image": "/images/shop/flat-cap.svg" }
 ```

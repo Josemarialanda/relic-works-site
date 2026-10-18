@@ -49,6 +49,13 @@
       "problemMatcher": [],
       "presentation": { "reveal": "always" },
       "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "Add product",
+      "type": "shell",
+      "command": "nix develop -c npm run add-product",
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "reveal": "always", "focus": true }
     }
   ]
 }
