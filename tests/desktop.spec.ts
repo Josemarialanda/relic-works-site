@@ -303,6 +303,72 @@ test.describe("images", () => {
   });
 });
 
+test("a shop image is hidden behind a pixel pattern while it loads, then it shows", async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/_next/image**", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto("/shop");
+  const img = page.locator("main img").first();
+  await expect(img).toHaveCSS("opacity", "0");
+  release();
+  // The blocks sharpen for about 0.4 s. Then the canvas is gone and the photo shows.
+  await expect(img).toHaveCSS("opacity", "1");
+  await expect(page.locator("main canvas")).toHaveCount(0);
+});
+
+test.describe("pixelated image on a 2x screen", () => {
+  // On a 2x screen (a retina Mac) the browser reports naturalWidth in CSS pixels. The blocks once showed only the
+  // top-left part of the photo, enlarged. The canvas must show the same photo as the image.
+  test.use({ deviceScaleFactor: 2 });
+
+  test("the pixel blocks show the whole photo, not a corner", async ({ page }) => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/_next/image**", async (route) => {
+      await gate;
+      await route.continue();
+    });
+    await page.goto("/shop");
+    const card = page.locator("main img").first().locator("xpath=..");
+    await expect(card.locator("img")).toHaveCSS("opacity", "0");
+    release();
+    // Compare the mean brightness of the four quarters of the canvas with the same quarters of the photo.
+    const diff = await card.evaluate(
+      (box) =>
+        new Promise<number>((resolve, reject) => {
+          const img = box.querySelector("img")!;
+          const started = performance.now();
+          const tick = () => {
+            const canvas = box.querySelector("canvas");
+            if (!canvas) return performance.now() - started > 8000 ? reject(new Error("no canvas")) : requestAnimationFrame(tick);
+            const quarters = (source: CanvasImageSource, sx: number, sy: number, sw: number, sh: number) => {
+              const c = document.createElement("canvas");
+              c.width = c.height = 2;
+              const ctx = c.getContext("2d")!;
+              ctx.drawImage(source, sx, sy, sw, sh, 0, 0, 2, 2);
+              const d = ctx.getImageData(0, 0, 2, 2).data;
+              return [0, 4, 8, 12].map((i) => (d[i] + d[i + 1] + d[i + 2]) / 3);
+            };
+            // The photo is cropped to the box like object-fit: cover, so take the middle part of it with the box shape.
+            const scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+            const photo = document.createElement("canvas");
+            photo.width = canvas.width;
+            photo.height = canvas.height;
+            photo.getContext("2d")!.drawImage(img, (canvas.width - img.naturalWidth * scale) / 2, (canvas.height - img.naturalHeight * scale) / 2, img.naturalWidth * scale, img.naturalHeight * scale);
+            const a = quarters(canvas, 0, 0, canvas.width, canvas.height);
+            const b = quarters(photo, 0, 0, photo.width, photo.height);
+            resolve(Math.max(...a.map((v, i) => Math.abs(v - b[i]))));
+          };
+          requestAnimationFrame(tick);
+        }),
+    );
+    expect(diff).toBeLessThan(30);
+  });
+});
+
 test.describe("product range", () => {
   const PRODUCTS = ["Quill Stem", "Threadless Stem", `1" Spacer`, `1 1/8" Spacer`, "Flat Cap", "Spacer Cap"];
 

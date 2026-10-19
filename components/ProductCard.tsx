@@ -10,7 +10,7 @@ export function ProductCard({ name, price, meta, image }: Props) {
   return (
     <div className={styles.card}>
       {/* A product has no image until you add one in the Stripe dashboard. */}
-      {image ? <Photo src={image} alt={name} sizes="(max-width: 767px) 50vw, 25vw" className={styles.image} /> : <Placeholder label={name} className={styles.image} />}
+      {image ? <Photo src={image} alt={name} sizes="(max-width: 767px) 50vw, 25vw" pixelate className={styles.image} /> : <Placeholder label={name} className={styles.image} />}
       <div className={styles.body}>
         <span className="meta muted">{meta}</span>
         <div className={layout.between}>
