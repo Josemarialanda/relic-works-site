@@ -1,7 +1,8 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { PART_NAME } from "../data/bespoke";
 import { bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
-import { MAX_QTY, productByName } from "./catalog";
+import { MAX_QTY, productByName, type Product } from "./catalog";
+import { useCatalog } from "./catalog-context";
 export { gbp } from "./money";
 
 export type BagItem = {
@@ -46,16 +47,18 @@ function isBagItem(v: unknown): v is BagItem {
     typeof i.price === "number" &&
     Number.isInteger(i.qty) &&
     (i.qty as number) > 0 &&
-    // A bag saved earlier can hold a product that the shop no longer sells, or a bespoke part in an
-    // old format.
-    (i.bespoke !== undefined ? parseBespoke(i.bespoke) !== null : productByName(i.name as string) !== undefined)
+    // A bag saved earlier can hold a bespoke part in an old format.
+    (i.bespoke === undefined || parseBespoke(i.bespoke) !== null)
   );
 }
 
-// The price and quantity that the shop uses now. A saved bag can hold an old price.
-function current(item: BagItem): BagItem {
+// The price and quantity that the shop uses now. A saved bag can hold an old price. It can also hold a product
+// that the shop no longer sells: this gives null for it.
+function current(item: BagItem, products: readonly Product[]): BagItem | null {
   const bespoke = item.bespoke && parseBespoke(item.bespoke);
-  const price = bespoke ? bespokePrice(bespoke) : productByName(item.name)!.price;
+  const product = bespoke ? undefined : productByName(products, item.name);
+  if (!bespoke && !product) return null;
+  const price = bespoke ? bespokePrice(bespoke) : product!.price;
   return { ...item, price, qty: Math.min(item.qty, MAX_QTY), ...(bespoke ? { bespoke } : {}) };
 }
 
@@ -77,7 +80,7 @@ function read(): BagItem[] {
   } else {
     try {
       const parsed: unknown = JSON.parse(raw);
-      cachedItems = Array.isArray(parsed) ? parsed.filter(isBagItem).map(current) : EMPTY;
+      cachedItems = Array.isArray(parsed) ? parsed.filter(isBagItem) : EMPTY;
     } catch {
       cachedItems = EMPTY;
     }
@@ -113,8 +116,11 @@ function subscribe(onChange: () => void): () => void {
   };
 }
 
+// The items in the bag, with the prices of the shop now. The shop sells the products of the catalog.
 export function useBag(): BagItem[] {
-  return useSyncExternalStore(subscribe, read, () => EMPTY);
+  const { products } = useCatalog();
+  const saved = useSyncExternalStore(subscribe, read, () => EMPTY);
+  return useMemo(() => saved.flatMap((i) => current(i, products) ?? []), [saved, products]);
 }
 
 export function bagCount(items: BagItem[]): number {

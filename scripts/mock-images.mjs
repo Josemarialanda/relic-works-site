@@ -159,7 +159,6 @@ const P = (slug, ...a) => fit(PRODUCT[slug][0](), PRODUCT[slug][1], ...a);
 const out = {};
 const WIDE = ["spacer-cap", "spacer-1-1-8in", "spacer-1in"];
 for (const slug of Object.keys(PRODUCT)) {
-  out[`shop/${slug}.svg`] = doc(1200, 1200, P(slug, 600, 620, 820, 760));
   // Wide collage tiles show only the middle half of the height, so the product stays inside it. The stems turn a little.
   const tile = doc(1200, 1200, P(slug, 600, 600, 860, 560, slug.includes("stem") ? -4 : 0));
   out[`home/collage-${slug}.svg`] = tile;

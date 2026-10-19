@@ -1,5 +1,5 @@
 // Checks for the JSON data files. A wrong value stops the build (and the page) with a message that names the
-// file and the field, for example: data/products.json: products[2].price: must be a number above 0.
+// file and the field, for example: data/shipping.json: zones[1].price: must be a number of 0 or more.
 // The same checks run in the browser, but the build fails first, so a visitor never sees the error.
 
 export function fail(file: string, where: string, problem: string): never {

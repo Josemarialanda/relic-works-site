@@ -1,20 +1,19 @@
 # Static assets
 
-Next.js serves every file in this folder from the site root. `public/images/shop/frame.webp` is at `/images/shop/frame.webp`.
+Next.js serves every file in this folder from the site root. `public/images/home/hero.webp` is at `/images/home/hero.webp`.
 Put an image that only one component imports next to that component instead, and import it. Next.js then hashes and optimises it.
 
 | Folder | Content |
 |---|---|
 | `images/brand/` | Logo, social share image, and other brand images. |
 | `images/home/` | Photos for the home page (hero slides, categories, news, collage). |
-| `images/shop/` | Product photos. Use the product slug in the file name. |
 | `images/bespoke/` | Photos for the bespoke configurator (stems, spacers, caps). |
 | `images/workshop/` | Photos for the workshop page (hero, process steps, collage). |
 | `icons/` | SVG icons and the favicon set. |
 | `fonts/` | Self-hosted font files. The site uses `next/font/google` today. |
 
 The home and workshop pages each have a copy of the collage images, so you can change one page and not the other.
-The pages set the paths: `data/products.json` for products, and the data arrays at the top of each page or component for the rest.
+The pages set the paths: the data arrays at the top of each page or component for the rest.
 
 ## Rules
 

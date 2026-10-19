@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { addToBag } from "@/lib/bag";
-import { CATEGORIES, FINISHES, MATERIALS, PRODUCTS, type Category, type Product } from "@/data/products";
+import type { Product } from "@/lib/catalog";
+import { useCatalog } from "@/lib/catalog-context";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import { ProductCard } from "./ProductCard";
@@ -18,10 +19,6 @@ type Sort = (typeof SORTS)[number];
 
 const NO_FILTERS: Filters = { cats: [], mats: [], fins: [] };
 
-function isCategory(v: string): v is Category {
-  return (CATEGORIES as readonly string[]).includes(v);
-}
-
 // A product matches when it passes every filter group, except the group in `skip`.
 function matches(p: Product, f: Filters, skip?: FilterKey): boolean {
   return (Object.keys(FIELD) as FilterKey[]).every(
@@ -34,6 +31,7 @@ function specOf(p: Product): string {
 }
 
 export function Shop() {
+  const { categories: CATEGORIES, materials: MATERIALS, finishes: FINISHES, products: PRODUCTS } = useCatalog();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sort, setSort] = useState<Sort>("Featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -42,14 +40,14 @@ export function Shop() {
   useEffect(() => {
     const readHash = () => {
       const c = decodeURIComponent(window.location.hash.slice(1));
-      if (isCategory(c)) setFilters((f) => ({ ...f, cats: [c] }));
+      if (CATEGORIES.includes(c)) setFilters((f) => ({ ...f, cats: [c] }));
       else if (!c) setFilters((f) => ({ ...f, cats: [] }));
       window.scrollTo(0, 0);
     };
     readHash();
     window.addEventListener("hashchange", readHash);
     return () => window.removeEventListener("hashchange", readHash);
-  }, []);
+  }, [CATEGORIES]);
 
   const toggle = (key: FilterKey, v: string) =>
     setFilters((f) => ({ ...f, [key]: f[key].includes(v) ? f[key].filter((x) => x !== v) : [...f[key], v] }));
@@ -59,7 +57,7 @@ export function Shop() {
     if (sort === "Price ↑") return [...l].sort((a, b) => a.price - b.price);
     if (sort === "Price ↓") return [...l].sort((a, b) => b.price - a.price);
     return l;
-  }, [filters, sort]);
+  }, [PRODUCTS, filters, sort]);
 
   const groups = (filters.cats.length ? CATEGORIES.filter((c) => filters.cats.includes(c)) : CATEGORIES)
     .map((c) => ({ name: c, items: list.filter((p) => p.cat === c) }))

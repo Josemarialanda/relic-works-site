@@ -8,15 +8,23 @@
       "isBackground": true,
       "problemMatcher": {
         "owner": "next",
-        "pattern": { "regexp": "^$" },
+        "pattern": {
+          "regexp": "^$"
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "Starting\\.\\.\\.",
           "endsPattern": "Ready in"
         }
       },
-      "presentation": { "panel": "dedicated", "reveal": "always" },
-      "group": { "kind": "build", "isDefault": true }
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "label": "Build",
@@ -33,29 +41,32 @@
       "isBackground": true,
       "problemMatcher": {
         "owner": "next",
-        "pattern": { "regexp": "^$" },
+        "pattern": {
+          "regexp": "^$"
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "Starting\\.\\.\\.",
           "endsPattern": "Ready in"
         }
       },
-      "presentation": { "panel": "dedicated", "reveal": "always" }
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always"
+      }
     },
     {
       "label": "Test",
       "type": "shell",
       "command": "nix develop -c npm test",
       "problemMatcher": [],
-      "presentation": { "reveal": "always" },
-      "group": { "kind": "test", "isDefault": true }
-    },
-    {
-      "label": "Add product",
-      "type": "shell",
-      "command": "nix develop -c npm run add-product",
-      "problemMatcher": [],
-      "presentation": { "panel": "dedicated", "reveal": "always", "focus": true }
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     }
   ]
 }

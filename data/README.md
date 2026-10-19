@@ -1,12 +1,11 @@
 # Site data
 
-This folder has the data that you edit to change the shop: products, prices, bespoke options and delivery.
+This folder has the data that you edit to change the shop: bespoke options and delivery. The products are in Stripe (see below).
 The data is in JSON files. The `.ts` file with the same name loads the JSON and checks it. The code that
 uses the data (price rules, totals) is in `lib/`.
 
 | File | What you edit |
 |---|---|
-| `products.json` | The catalogue products: name, category, material, finish, price (in pounds) and image path. |
 | `bespoke.json` | The bespoke options, the default choices, the limits of the custom sizes, and the **price rules**. |
 | `shipping.json` | The delivery zones: price, free-delivery limit, text, and the countries of each zone. |
 
@@ -16,26 +15,30 @@ uses the data (price rules, totals) is in `lib/`.
   The server prices each order from these files and ignores any price that the browser sends.
 - A change goes live when you deploy. Run `npm test` first: some tests check prices, so update them with the price.
 - Every file is checked when the site builds. A wrong value stops the build with a message that names the file
-  and the field, for example `data/products.json: products[4].price: must be a number above 0`. A JSON syntax error
+  and the field, for example `data/shipping.json: zones[1].price: must be a number of 0 or more`. A JSON syntax error
   (a missing comma or quote) also stops the build. Nobody sees a wrong value on the live site.
 - JSON has no comments, so the rules are here.
 
-## products.json
+## Products (in Stripe)
 
-To add a product, run `npm run add-product`. The script asks for each field, copies the image, and adds the line.
-You can also add the line by hand:
+The shop reads its products from your Stripe account. A change in Stripe shows on the site in about a minute.
 
-```json
-{ "name": "Flat Cap", "category": "Caps", "material": "Aluminium", "finish": "Painted", "price": 32, "image": "/images/shop/flat-cap.jpg" }
-```
+A Stripe product is a shop product when it is **active**, it has a default **one-time price in GBP**, and its
+**metadata** has these keys:
 
-- `name` must be different for each product. A saved bag finds a product by its name, so a changed name removes
-  the old product from the bags that customers have saved.
-- `category`, `material` and `finish` must be in the lists at the top of the file (`categories`, `materials`,
-  `finishes`). Each category needs at least one product.
-- `price` is in pounds, with at most 2 decimal places (for example `19.99`).
-- `image` is a path in `public/images` that ends in `.svg`, `.png`, `.jpg`, `.webp` or `.avif`. The test
-  `npm test` checks that the file exists. See `public/README.md`.
+| Metadata key | Value |
+|---|---|
+| `category` | A category, for example `Stems`. The filters list the categories, materials and finishes that the products use. |
+| `material` | For example `Steel`. |
+| `finish` | For example `Painted`. |
+| `order` | Optional number. It sets the order of the "Featured" sort (lowest first). |
+
+- The product **name** must be different for each active product. A saved bag finds a product by its name.
+- The first **image** of the product is the shop image. Add it in the dashboard (Product → Images). Until it has an image, the shop shows a grey tile.
+- The home page and the hero use the categories `Stems`, `Spacers` and `Caps`.
+- A wrong product (for example no `category`) stops the build with a message that names the product.
+- To remove a product from the shop, set it to inactive (archive it) in the dashboard.
+- The site needs `STRIPE_SECRET_KEY` to build and to run. There is no fallback.
 
 ## shipping.json
 

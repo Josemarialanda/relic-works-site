@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { fromPrice } from "@/lib/catalog";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fromLabel, type Product } from "@/lib/catalog";
+import { useCatalog } from "@/lib/catalog-context";
 import { cx } from "@/lib/cx";
 import { useSwipe } from "@/lib/useSwipe";
 import styles from "./HeroCarousel.module.css";
@@ -11,15 +12,17 @@ import { Photo } from "./Photo";
 import button from "./ui/button.module.css";
 import dots from "./ui/dots.module.css";
 
-const SLIDES = [
-  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: `Quill and threadless · From £${fromPrice("Stems")}`, cta: "Shop stems", image: "/images/home/hero-stems.jpg", alt: "A quill stem and a threadless stem" },
-  { name: "Spacers", kicker: "Spacers", meta: `For 1" and 1 1/8" steerers · From £${fromPrice("Spacers")}`, cta: "Shop spacers", image: "/images/home/hero-spacers.jpg", alt: "A stack of machined spacers" },
-  { name: "Caps", kicker: "Caps", meta: `Flat caps and spacer caps · From £${fromPrice("Caps")}`, cta: "Shop caps", image: "/images/home/hero-caps.jpg", alt: "A flat cap and a spacer cap" },
+const slidesFor = (products: Product[]) => [
+  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: `Quill and threadless · ${fromLabel(products, "Stems")}`, cta: "Shop stems", image: "/images/home/hero-stems.jpg", alt: "A quill stem and a threadless stem" },
+  { name: "Spacers", kicker: "Spacers", meta: `For 1" and 1 1/8" steerers · ${fromLabel(products, "Spacers")}`, cta: "Shop spacers", image: "/images/home/hero-spacers.jpg", alt: "A stack of machined spacers" },
+  { name: "Caps", kicker: "Caps", meta: `Flat caps and spacer caps · ${fromLabel(products, "Caps")}`, cta: "Shop caps", image: "/images/home/hero-caps.jpg", alt: "A flat cap and a spacer cap" },
 ];
 
 const INTERVAL_MS = 5000;
 
 export function HeroCarousel() {
+  const { products } = useCatalog();
+  const SLIDES = useMemo(() => slidesFor(products), [products]);
   const [cur, setCur] = useState(0);
   // A new value restarts the timer after a manual pick.
   const [tick, setTick] = useState(0);

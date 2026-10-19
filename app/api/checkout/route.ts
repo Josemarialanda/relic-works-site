@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { getCatalog } from "@/lib/catalog-server";
 import { buildOrder } from "@/lib/checkout";
 import { getStripe } from "@/lib/stripe";
 
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "The order is not valid." }, { status: 400 });
   }
 
-  const result = buildOrder(body);
+  const { products } = await getCatalog();
+  const result = buildOrder(body, products);
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
   const { zone, lines, subtotal, shipping } = result.order;
 
@@ -29,19 +31,24 @@ export async function POST(request: Request) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: lines.map((l) => ({
-        quantity: l.quantity,
-        price_data: {
-          currency: "gbp",
-          unit_amount: l.unitAmount,
-          product_data: {
-            name: l.name,
-            description: l.description,
-            // The order page in the Stripe dashboard shows these options, so you can make the part.
-            ...(l.bespoke && { metadata: { bespoke: JSON.stringify(l.bespoke) } }),
-          },
-        },
-      })),
+      // A catalog product uses its Stripe price. A bespoke part has no Stripe product, so it sends its price.
+      line_items: lines.map((l) =>
+        l.priceId
+          ? { quantity: l.quantity, price: l.priceId }
+          : {
+              quantity: l.quantity,
+              price_data: {
+                currency: "gbp",
+                unit_amount: l.unitAmount,
+                product_data: {
+                  name: l.name,
+                  description: l.description,
+                  // The order page in the Stripe dashboard shows these options, so you can make the part.
+                  ...(l.bespoke && { metadata: { bespoke: JSON.stringify(l.bespoke) } }),
+                },
+              },
+            },
+      ),
       shipping_address_collection: { allowed_countries: zone.countries as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] },
       shipping_options: [
         {

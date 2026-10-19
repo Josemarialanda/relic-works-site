@@ -37,8 +37,8 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 
 - `app/`: the pages (home, shop, bespoke, bag, workshop, support).
 - `components/`: the React components, each with a CSS module.
-- `data/`: the JSON files that you edit to change the shop: products and prices, bespoke options and price rules, and delivery zones. The build checks them. See `data/README.md`.
-- `lib/catalog.ts`: functions that read the product data.
+- `data/`: the JSON files that you edit to change the shop: bespoke options and price rules, and delivery zones. The build checks them. See `data/README.md`.
+- `lib/catalog.ts`, `lib/catalog-stripe.ts`, `lib/catalog-server.ts`: the catalog. The products come from Stripe (see "Products" below).
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
 - `lib/checkout.ts`, `lib/bespoke.ts`, `lib/shipping.ts`: the order check, the bespoke check and price, and the delivery price. The browser and the server both use them. See Checkout below.
 - `app/api/checkout/route.ts`: starts a Stripe payment. `app/checkout/success/` is the page after payment.
@@ -48,16 +48,17 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 
 ## Checkout
 
-The site has a guest checkout with no accounts. The bag stays in the browser (`localStorage`). When the customer presses Checkout, the browser sends the server only product names, quantities, bespoke options and the delivery zone. The server takes every price from the files in `data/`, so a price in the browser is never trusted. Then it creates a [Stripe Checkout](https://docs.stripe.com/payments/checkout) session. Stripe shows the payment page, collects the address, email and phone number, takes the payment and sends the receipt. The site stores no orders: read them in the Stripe dashboard. A bespoke order has its options in the metadata of its line item.
+The site has a guest checkout with no accounts. The bag stays in the browser (`localStorage`). When the customer presses Checkout, the browser sends the server only product names, quantities, bespoke options and the delivery zone. The server takes every price from the Stripe products (and the bespoke rules in `data/`), so a price in the browser is never trusted. Then it creates a [Stripe Checkout](https://docs.stripe.com/payments/checkout) session. Stripe shows the payment page, collects the address, email and phone number, takes the payment and sends the receipt. The site stores no orders: read them in the Stripe dashboard. A bespoke order has its options in the metadata of its line item.
 
 To set it up:
 
 1. Make a Stripe account. Copy a **test** secret key (`sk_test_...`) from the dashboard.
 2. For local work, copy `.env.example` to `.env.local` and set `STRIPE_SECRET_KEY`. Restart the dev server.
 3. For the host, set `STRIPE_SECRET_KEY` in the Vercel project (the preview environment gets a test key, the production environment gets the live key). The deploy workflow reads it with `vercel pull`.
-4. Pay with the test card `4242 4242 4242 4242` (any future date, any code).
+4. The shop products come from Stripe: add them in the Stripe dashboard with an image and the metadata in `data/README.md`. The build fails if the key is missing.
+5. Pay with the test card `4242 4242 4242 4242` (any future date, any code).
 
-Before you go live, check these placeholders and open points:
+Before you go live, follow the checklist in `GO-LIVE.md`. These are the placeholders and open points:
 
 - **Bespoke prices.** The rules in `data/bespoke.json` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
 - **Delivery.** The prices and the countries of each zone are in `data/shipping.json`. The support page and the bag read the same file.

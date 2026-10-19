@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Footer } from "@/components/Footer";
+import { getCatalog } from "@/lib/catalog-server";
+import { CatalogProvider } from "@/lib/catalog-context";
 import { TopNav } from "@/components/TopNav";
 import "./globals.css";
 import styles from "./layout.module.css";
@@ -28,15 +30,18 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Relic Works", description: DESCRIPTION, images: [SHARE_IMAGE.url] },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const catalog = await getCatalog();
   return (
     <html lang="en" className={inter.variable}>
       <body>
-        <div className={styles.page}>
-          <TopNav />
-          {children}
-          <Footer />
-        </div>
+        <CatalogProvider catalog={catalog}>
+          <div className={styles.page}>
+            <TopNav />
+            {children}
+            <Footer />
+          </div>
+        </CatalogProvider>
       </body>
     </html>
   );

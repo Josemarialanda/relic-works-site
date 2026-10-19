@@ -3,12 +3,27 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import bespokeJson from "../data/bespoke.json";
 import { PART_IDS, parseBespokeData } from "../data/bespoke";
-import productsJson from "../data/products.json";
-import { parseProducts } from "../data/products";
+import productsJson from "./fixtures/products.json";
 import shippingJson from "../data/shipping.json";
 import { parseZones } from "../data/shipping";
 import { buildOrder } from "../lib/checkout";
+import { parseStripeProducts } from "../lib/catalog-stripe";
+import type Stripe from "stripe";
 import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
+
+// Fake Stripe products made from tests/fixtures/products.json. The tests of the catalog code use them, so these
+// tests need no network. The tests that open the site use the real Stripe products of the account in STRIPE_SECRET_KEY.
+const fakeStripeProducts = (data: typeof productsJson) =>
+  data.products.map((p, i) => ({
+    id: `prod_${i}`,
+    name: p.name,
+    active: true,
+    images: [`https://files.stripe.com/links/${i}`],
+    metadata: { category: p.category, material: p.material, finish: p.finish, order: String(i + 1) },
+    default_price: { id: `price_${i}`, currency: "gbp", type: "one_time", unit_amount: Math.round(p.price * 100) },
+  })) as unknown as Stripe.Product[];
+const CATALOG = parseStripeProducts(fakeStripeProducts(productsJson));
+const order = (payload: unknown) => buildOrder(payload, CATALOG.products);
 
 // With a mouse, the touch changes must not change the site.
 
@@ -429,24 +444,24 @@ async function saveBag(page: import("@playwright/test").Page, items: object[]) {
 // A bag with three lines (4 items): a stem, a bespoke stem and two caps. The bag is empty on a first visit.
 const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" };
 const DEMO_BAG = [
-  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/shop/threadless-stem.jpg" },
+  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/home/collage-threadless-stem.jpg" },
   { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 600, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM },
-  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/shop/spacer-cap.jpg" },
+  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/home/collage-spacer-cap.jpg" },
 ];
 
 test.describe("checkout order check (server rules)", () => {
   const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Painted", color: "Green", height: "40 mm", length: "90 mm", angle: "±6°" };
 
   test("it prices catalogue items from the catalog and ignores a price from the browser", () => {
-    const r = buildOrder({ zone: "uk", items: [{ name: "Flat Cap", qty: 2, price: 1, unitAmount: 1 }] });
+    const r = order({ zone: "uk", items: [{ name: "Flat Cap", qty: 2, price: 1, unitAmount: 1 }] });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.order.lines).toEqual([{ name: "Flat Cap", description: "Aluminium · Painted", unitAmount: 3200, quantity: 2 }]);
+    expect(r.order.lines).toEqual([{ name: "Flat Cap", description: "Aluminium · Painted", unitAmount: 3200, quantity: 2, priceId: "price_4" }]);
     expect(r.order.subtotal).toBe(64);
   });
 
   test("it prices a bespoke part from its options, and ignores a price and other fields", () => {
-    const r = buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, price: 1 }, qty: 1, price: 1 }] });
+    const r = order({ zone: "uk", items: [{ bespoke: { ...STEM, price: 1 }, qty: 1, price: 1 }] });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     // 220 × 1 (steel) × (1 + 0.10 brazed + 0.10 painted)
@@ -455,10 +470,10 @@ test.describe("checkout order check (server rules)", () => {
   });
 
   test("a custom size costs more, and a custom size out of range is not valid", () => {
-    const custom = buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, length: "95 mm" }, qty: 1 }] });
+    const custom = order({ zone: "uk", items: [{ bespoke: { ...STEM, length: "95 mm" }, qty: 1 }] });
     expect(custom.ok && custom.order.lines[0].unitAmount).toBe(Math.round(220 * 1.3) * 100);
     for (const length of ["39 mm", "151 mm", "abc", "95mm"]) {
-      expect(buildOrder({ zone: "uk", items: [{ bespoke: { ...STEM, length }, qty: 1 }] }).ok, length).toBe(false);
+      expect(order({ zone: "uk", items: [{ bespoke: { ...STEM, length }, qty: 1 }] }).ok, length).toBe(false);
     }
   });
 
@@ -483,12 +498,12 @@ test.describe("checkout order check (server rules)", () => {
       { zone: "uk", items: [{ bespoke: { ...STEM, color: undefined }, qty: 1 }] },
       { zone: "uk", items: Array.from({ length: 51 }, () => ({ name: "Flat Cap", qty: 1 })) },
     ];
-    for (const payload of bad) expect(buildOrder(payload).ok, JSON.stringify(payload)).toBe(false);
+    for (const payload of bad) expect(order(payload).ok, JSON.stringify(payload)).toBe(false);
   });
 
   test("delivery: UK is free from £100, other zones always have a price", () => {
     const cost = (zone: string, qty: number) => {
-      const r = buildOrder({ zone, items: [{ name: "Flat Cap", qty }] });
+      const r = order({ zone, items: [{ name: "Flat Cap", qty }] });
       return r.ok ? r.order.shipping : NaN;
     };
     expect(cost("uk", 3)).toBe(6); // £96
@@ -701,45 +716,64 @@ test.describe("data files", () => {
 
   test("the products, zones and bespoke options are valid", () => {
     // The files are checked when they load, so this runs only if the real data is valid.
-    expect(parseProducts(productsJson).products).toHaveLength(6);
+    expect(CATALOG.products).toHaveLength(6);
     expect(parseZones(shippingJson).map((z) => z.id)).toEqual(["uk", "europe", "world"]);
     expect(parseBespokeData(bespokeJson).defaults.material).toBe("Steel");
   });
 
-  test("every product image is a file in public/images", () => {
-    const paths = [...parseProducts(productsJson).products.map((p) => p.image), ...PART_IDS.map((id) => `/images/bespoke/${id}.jpg`)];
+  test("every bespoke image is a file in public/images", () => {
+    const paths = PART_IDS.map((id) => `/images/bespoke/${id}.jpg`);
     for (const path of paths) expect(existsSync(join("public", path)), path).toBe(true);
   });
 
   test("every price is a whole number of pence, so Stripe accepts it", () => {
-    for (const p of parseProducts(productsJson).products) {
-      const r = buildOrder({ zone: "uk", items: [{ name: p.name, qty: 1 }] });
+    for (const p of CATALOG.products) {
+      const r = order({ zone: "uk", items: [{ name: p.name, qty: 1 }] });
       expect(r.ok && Number.isInteger(r.order.lines[0].unitAmount), p.name).toBe(true);
     }
   });
 
-  test("a product with a price such as 19.99 gives whole pence", () => {
-    // 19.99 * 100 is 1998.9999999999998 in floating-point numbers.
-    expect(19.99 * 100).not.toBe(1999);
-    const data = clone(productsJson);
-    data.products[4].price = 19.99;
-    expect(parseProducts(data).products[4].price).toBe(19.99);
-    expect(Math.round(19.99 * 100)).toBe(1999);
+  test("the catalog has the categories, materials, finishes and order of the Stripe products", () => {
+    expect(CATALOG.categories).toEqual(["Stems", "Spacers", "Caps"]);
+    expect(CATALOG.materials).toEqual(["Steel", "Aluminium", "Titanium"]);
+    expect(CATALOG.products.map((p) => p.name)).toEqual(productsJson.products.map((p) => p.name));
+    expect(CATALOG.products[4]).toMatchObject({ id: "prod_4", priceId: "price_4", name: "Flat Cap", price: 32 });
   });
 
-  test("a wrong product is refused, and the message names the file and the field", () => {
-    const bad = (change: (d: typeof productsJson) => void) => {
-      const d = clone(productsJson);
-      change(d);
-      return () => parseProducts(d);
+  test("a product with a price such as 19.99 gives whole pence", () => {
+    // 19.99 * 100 is 1998.9999999999998 in floating-point numbers. Stripe keeps the price in pence.
+    const list = fakeStripeProducts(productsJson);
+    (list[4].default_price as Stripe.Price).unit_amount = 1999;
+    const product = parseStripeProducts(list).products[4];
+    expect(product.price).toBe(19.99);
+    const r = buildOrder({ zone: "uk", items: [{ name: "Flat Cap", qty: 1 }] }, [product]);
+    expect(r.ok && r.order.lines[0].unitAmount).toBe(1999);
+  });
+
+  test("a product with no image yet is in the catalog with a null image", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[0].images = [];
+    expect(parseStripeProducts(list).products[0].image).toBeNull();
+  });
+
+  test("a product that is not active is not in the catalog", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[0].active = false;
+    expect(parseStripeProducts(list).products).toHaveLength(5);
+  });
+
+  test("a wrong Stripe product is refused, and the message names the product", () => {
+    const bad = (change: (l: Stripe.Product[]) => void) => {
+      const list = fakeStripeProducts(productsJson);
+      change(list);
+      return () => parseStripeProducts(list);
     };
-    expect(bad((d) => (d.products[1].name = d.products[0].name))).toThrow(/products\.json: products\[1\]\.name: "Quill Stem" is used by more than one product/);
-    expect(bad((d) => (d.products[0].category = "Bikes"))).toThrow(/products\[0\]\.category: "Bikes" is not one of: Stems, Spacers, Caps/);
-    expect(bad((d) => (d.products[0].price = 0))).toThrow(/products\[0\]\.price: must be a number above 0/);
-    expect(bad((d) => (d.products[0].price = 19.999))).toThrow(/products\[0\]\.price: must have at most 2 decimal places/);
-    expect(bad((d) => (d.products[0].image = "shop/a.svg"))).toThrow(/products\[0\]\.image: must be a path in public\/images/);
-    expect(bad((d) => (d.products = d.products.filter((p) => p.category !== "Caps")))).toThrow(/the category "Caps" has no product/);
-    expect(() => parseProducts({})).toThrow(/products\.json: categories: must be a list/);
+    expect(bad((l) => (l[1].name = l[0].name))).toThrow(/Stripe product "Quill Stem": more than one active product has this name/);
+    expect(bad((l) => delete l[0].metadata.category)).toThrow(/Stripe product "Quill Stem" \(prod_0\): the metadata "category" is missing/);
+    expect(bad((l) => (l[0].default_price = null))).toThrow(/Quill Stem" \(prod_0\): it has no default price/);
+    expect(bad((l) => ((l[0].default_price as Stripe.Price).currency = "usd"))).toThrow(/its price is in USD/);
+    expect(bad((l) => ((l[0].default_price as Stripe.Price).unit_amount = 0))).toThrow(/its price must be above 0/);
+    expect(bad((l) => (l[0].metadata.order = "first"))).toThrow(/the metadata "order" must be a number/);
   });
 
   test("a wrong delivery zone is refused", () => {

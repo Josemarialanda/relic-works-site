@@ -4,7 +4,8 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { NewsRotator } from "@/components/NewsRotator";
 import { Photo } from "@/components/Photo";
-import { fromPrice } from "@/lib/catalog";
+import { fromLabel } from "@/lib/catalog";
+import { getCatalog } from "@/lib/catalog-server";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import styles from "./page.module.css";
@@ -16,9 +17,9 @@ const PROMISES = [
 ];
 
 const CATEGORIES = [
-  { name: "Stems", meta: `From £${fromPrice("Stems")}`, image: "/images/home/category-stems.jpg" },
-  { name: "Spacers", meta: `From £${fromPrice("Spacers")}`, image: "/images/home/category-spacers.jpg" },
-  { name: "Caps", meta: `From £${fromPrice("Caps")}`, image: "/images/home/category-caps.jpg" },
+  { name: "Stems", image: "/images/home/category-stems.jpg" },
+  { name: "Spacers", image: "/images/home/category-spacers.jpg" },
+  { name: "Caps", image: "/images/home/category-caps.jpg" },
 ];
 
 const COLLAGE = [
@@ -30,7 +31,8 @@ const COLLAGE = [
   { alt: `1" Spacer`, src: "/images/home/collage-spacer-1in.jpg" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { products } = await getCatalog();
   return (
     <main>
       <HeroCarousel />
@@ -53,7 +55,7 @@ export default function HomePage() {
             </div>
             <div className={cx(layout.cell, layout.between)}>
               <span className="subheading">{c.name}</span>
-              <span className="meta">{c.meta}</span>
+              <span className="meta">{fromLabel(products, c.name)}</span>
             </div>
           </a>
         ))}
