@@ -18,9 +18,15 @@ export function Bag() {
   const items = useBag();
   const { products } = useCatalog();
   // The most of one item: 20 for a bespoke part, or the lower of 20 and the stock for a product.
+  const productOf = (i: BagItem) => (i.bespoke ? undefined : productByName(products, i.name));
   const maxOf = (i: BagItem) => {
-    const product = i.bespoke ? undefined : productByName(products, i.name);
+    const product = productOf(i);
     return product ? maxQty(product) : MAX_QTY;
+  };
+  // The number in stock when the bag holds all of it (the customer cannot add more), or null.
+  const stockLimit = (i: BagItem) => {
+    const stock = productOf(i)?.stock;
+    return stock != null && i.qty >= stock ? stock : null;
   };
   const zoneSelectId = useId();
   const [zoneId, setZoneId] = useState<ZoneId>(ZONES[0].id);
@@ -97,6 +103,11 @@ export function Bag() {
                   Remove
                 </button>
               </div>
+              {stockLimit(it) !== null && (
+                <span className="meta" role="status">
+                  Only {stockLimit(it)} in stock. You have all of them in your bag.
+                </span>
+              )}
             </div>
             <span>{gbp(it.price * it.qty)}</span>
           </div>
