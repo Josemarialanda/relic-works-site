@@ -1,7 +1,7 @@
 .hero { position: relative; height: 640px; overflow: hidden; border-bottom: var(--rule); }
 .heroKicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); }
 .heroPoster { position: absolute; left: 16px; bottom: var(--spacing-12); }
-/* "The workshop." is wider than "Relic Works", so it scales down sooner. The doubled class beats the global .poster size. */
+/* "The Workshop." is wider than "Relic Works", so it scales down sooner. The doubled class beats the global .poster size. */
 .hero .heroPoster { font-size: min(138px, 11.5vw); }
 .storyLabel { padding: var(--spacing-40) var(--spacing-20); }
 .story { padding: var(--spacing-40); }

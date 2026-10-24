@@ -59,7 +59,7 @@ export default function WorkshopPage() {
       <section className={styles.hero}>
         <Photo src="/images/workshop/hero.jpg" alt="Quill Stem held in the workshop" preload fill />
         <span className={cx("meta-b", styles.heroKicker)}>Turned, milled and finished in the UK</span>
-        <div className={cx("poster", styles.heroPoster)}>The workshop.</div>
+        <div className={cx("poster", styles.heroPoster)}>The Workshop.</div>
       </section>
 
       <section className={cx(layout.split57, layout.ruleB)}>
