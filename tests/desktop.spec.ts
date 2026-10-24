@@ -318,6 +318,23 @@ test("a shop image is hidden behind a pixel pattern while it loads, then it show
   await expect(page.locator("main canvas")).toHaveCount(0);
 });
 
+test("a bag image is hidden behind a pixel pattern while it loads, then it shows", async ({ page }) => {
+  // Open the bag page first, so that the saved bag exists before the images are held back.
+  await saveBag(page, DEMO_BAG);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/_next/image**", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.reload();
+  const img = page.locator("main img").first();
+  await expect(img).toHaveCSS("opacity", "0");
+  release();
+  await expect(img).toHaveCSS("opacity", "1");
+  await expect(page.locator("main canvas")).toHaveCount(0);
+});
+
 test.describe("pixelated image on a 2x screen", () => {
   // On a 2x screen (a retina Mac) the browser reports naturalWidth in CSS pixels. The blocks once showed only the
   // top-left part of the photo, enlarged. The canvas must show the same photo as the image.

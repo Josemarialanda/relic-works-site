@@ -77,7 +77,7 @@ export function Bag() {
           <div key={it.key} className={cx(styles.item, layout.ruleB)}>
             <div className={layout.ratio11}>
               {/* Items saved before the bag had images have no image. */}
-              {it.image ? <Photo src={it.image} alt={it.name} sizes="160px" /> : <Placeholder label={it.name} />}
+              {it.image ? <Photo src={it.image} alt={it.name} sizes="160px" pixelate /> : <Placeholder label={it.name} />}
             </div>
             <div className={cx(layout.stack, layout.gap8)}>
               <span className="meta muted">{it.type}</span>
