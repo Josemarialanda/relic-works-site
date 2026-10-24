@@ -21,5 +21,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // A fixed secret for the webhook tests. It is not a real Stripe secret.
+    env: { STRIPE_WEBHOOK_SECRET: "whsec_playwright_test_secret" },
   },
 });

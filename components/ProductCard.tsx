@@ -4,9 +4,9 @@ import { Photo } from "./Photo";
 import { Placeholder } from "./Placeholder";
 import styles from "./ProductCard.module.css";
 
-type Props = { name: string; price: string; meta: string; image: string | null };
+type Props = { name: string; price: string; meta: string; image: string | null; soldOut?: boolean };
 
-export function ProductCard({ name, price, meta, image }: Props) {
+export function ProductCard({ name, price, meta, image, soldOut = false }: Props) {
   return (
     <div className={styles.card}>
       {/* A product has no image until you add one in the Stripe dashboard. */}
@@ -15,7 +15,7 @@ export function ProductCard({ name, price, meta, image }: Props) {
         <span className="meta muted">{meta}</span>
         <div className={layout.between}>
           <span className={styles.name}>{name}</span>
-          <span>{price}</span>
+          <span className={soldOut ? "muted" : undefined}>{soldOut ? "Sold out" : price}</span>
         </div>
       </div>
     </div>

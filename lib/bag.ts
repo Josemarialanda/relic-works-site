@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { PART_NAME } from "../data/bespoke";
 import { bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
-import { MAX_QTY, productByName, type Product } from "./catalog";
+import { MAX_QTY, maxQty, productByName, type Product } from "./catalog";
 import { useCatalog } from "./catalog-context";
 export { gbp } from "./money";
 
@@ -58,8 +58,10 @@ function current(item: BagItem, products: readonly Product[]): BagItem | null {
   const bespoke = item.bespoke && parseBespoke(item.bespoke);
   const product = bespoke ? undefined : productByName(products, item.name);
   if (!bespoke && !product) return null;
+  // A product that is sold out is dropped, like a product that is not for sale.
+  if (product?.stock === 0) return null;
   const price = bespoke ? bespokePrice(bespoke) : product!.price;
-  return { ...item, price, qty: Math.min(item.qty, MAX_QTY), ...(bespoke ? { bespoke } : {}) };
+  return { ...item, price, qty: Math.min(item.qty, product ? maxQty(product) : MAX_QTY), ...(bespoke ? { bespoke } : {}) };
 }
 
 // useSyncExternalStore needs a stable snapshot, so parse only when the raw value changes.
@@ -97,9 +99,11 @@ export function setBag(items: BagItem[]): void {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-export function addToBag(item: Omit<BagItem, "qty">): void {
+// Add one item. `limit` is the most of this item that the bag can have (the stock of a product).
+export function addToBag(item: Omit<BagItem, "qty">, limit: number = MAX_QTY): void {
   const items = read();
   const existing = items.find((i) => i.key === item.key);
+  if (existing && existing.qty >= limit) return;
   setBag(
     existing
       ? items.map((i) => (i.key === item.key ? { ...i, qty: i.qty + 1 } : i))

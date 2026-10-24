@@ -43,6 +43,7 @@ export function buildOrder(payload: unknown, products: readonly Product[]): Orde
   if (items.length > MAX_LINES) return fail("There are too many items in the bag.");
 
   const lines: OrderLine[] = [];
+  const ordered = new Map<string, number>();
   for (const item of items) {
     if (typeof item !== "object" || item === null) return fail("The order is not valid.");
     const { name, bespoke, qty } = item as Record<string, unknown>;
@@ -65,6 +66,12 @@ export function buildOrder(payload: unknown, products: readonly Product[]): Orde
 
     const product = typeof name === "string" ? productByName(products, name) : undefined;
     if (!product) return fail("A product in your bag is not for sale now. Remove it and try again.");
+    // Count all the lines of one product together, against its stock.
+    const wanted = (ordered.get(product.name) ?? 0) + qty;
+    ordered.set(product.name, wanted);
+    if (product.stock !== null && wanted > product.stock) {
+      return fail(product.stock === 0 ? `${product.name} is sold out. Remove it and try again.` : `Only ${product.stock} of ${product.name} left. Lower the quantity and try again.`);
+    }
     // Round, because a price such as 19.99 times 100 is not exactly 1999 as a floating-point number, and Stripe needs whole pence.
     const unitAmount = Math.round(product.price * 100);
     lines.push({ name: product.name, description: `${product.mat} · ${product.fin}`, unitAmount, quantity: qty, priceId: product.priceId });

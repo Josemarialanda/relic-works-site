@@ -56,9 +56,24 @@ The build reads the products from Stripe, so **the build fails if the key is mis
 
 - [ ] Plan how you get orders. The site stores no orders and sends you no email. Read the orders in the Stripe dashboard,
       or turn on the Stripe email for new payments (Settings → Emails). A bespoke order has its options in the metadata of the line item.
-- [ ] Stock: there is no stock count. The shop sells a product until you set it to inactive in Stripe. Add a Stripe webhook
-      (`checkout.session.completed`) when you want stock counts or an email for each order.
+- [ ] Stock: add the metadata `stock` to each product that has a limit (see `data/README.md`). A product with no `stock` has no limit.
+- [ ] Stock webhook: see the next section. Without it, the stock count never goes down.
 - [ ] Add a rate limit on `/api/checkout` (for example with Vercel Firewall). The route has none now.
+
+## Stock webhook
+
+The webhook lowers the stock count after each paid order. Do this after the first deploy, because Stripe needs the address.
+
+- [ ] In the **live** dashboard, go to Developers → Webhooks → Add endpoint.
+- [ ] Set the address to `https://YOUR-DOMAIN/api/stripe-webhook`.
+- [ ] Choose the events `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
+- [ ] Copy the signing secret (`whsec_...`) and set `STRIPE_WEBHOOK_SECRET` for **Production** in Vercel. Deploy again.
+- [ ] Make the same endpoint in test mode for the Preview address, and set its secret for **Preview**.
+- [ ] Test: set `stock` to 2 on a product, make a real order for 1 item, and check that `stock` is 1 in the dashboard.
+- [ ] Look at the webhook log in Stripe (Developers → Webhooks) for failed calls. Stripe sends a failed call again.
+
+For local work, run `stripe listen --forward-to localhost:3000/api/stripe-webhook` (the Stripe CLI). It prints a
+`whsec_...` secret: put it in `.env.local`.
 
 ## 7. Deploy and check
 
@@ -86,4 +101,5 @@ The build reads the products from Stripe, so **the build fails if the key is mis
 | The build fails with `Stripe product "…": the metadata "category" is missing` | A product in that mode has no metadata. Add it in the dashboard. |
 | The shop shows a grey tile | The product has no image in Stripe. |
 | The Checkout button shows an error | The key is wrong for the mode, or Stripe is not active. Read the Vercel logs. |
+| The stock does not go down after an order | `STRIPE_WEBHOOK_SECRET` is missing, or the webhook endpoint is not set up. Read the webhook log in Stripe. |
 | A product is missing in the shop | It is inactive, or it was made in the other mode (test or live). |

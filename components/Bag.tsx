@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { bagCount, gbp, setBag, useBag, type BagItem } from "@/lib/bag";
-import { MAX_QTY } from "@/lib/catalog";
+import { MAX_QTY, maxQty, productByName } from "@/lib/catalog";
+import { useCatalog } from "@/lib/catalog-context";
 import { cx } from "@/lib/cx";
 import { ZONES, type ZoneId } from "@/data/shipping";
 import { shippingCost, zoneById } from "@/lib/shipping";
@@ -15,6 +16,12 @@ import button from "./ui/button.module.css";
 
 export function Bag() {
   const items = useBag();
+  const { products } = useCatalog();
+  // The most of one item: 20 for a bespoke part, or the lower of 20 and the stock for a product.
+  const maxOf = (i: BagItem) => {
+    const product = i.bespoke ? undefined : productByName(products, i.name);
+    return product ? maxQty(product) : MAX_QTY;
+  };
   const zoneSelectId = useId();
   const [zoneId, setZoneId] = useState<ZoneId>(ZONES[0].id);
   const [paying, setPaying] = useState(false);
@@ -82,7 +89,7 @@ export function Bag() {
                     −
                   </button>
                   <span className={styles.qtyValue}>{it.qty}</span>
-                  <button type="button" aria-label={`Add one ${it.name}`} disabled={it.qty >= MAX_QTY} onClick={() => update(it.key, (x) => ({ ...x, qty: x.qty + 1 }))}>
+                  <button type="button" aria-label={`Add one ${it.name}`} disabled={it.qty >= maxOf(it)} onClick={() => update(it.key, (x) => ({ ...x, qty: x.qty + 1 }))}>
                     +
                   </button>
                 </div>

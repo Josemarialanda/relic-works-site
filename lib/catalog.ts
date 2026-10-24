@@ -20,9 +20,14 @@ export type Product = {
   price: number;
   // The first image of the Stripe product, or null when it has none yet.
   image: string | null;
+  // The items in stock, from the metadata `stock`. It is null when the product has no limit.
+  stock: number | null;
 };
 
 export type Catalog = { categories: Category[]; materials: Material[]; finishes: Finish[]; products: Product[] };
+
+// The most of one product that an order can have: 20 or the stock, whichever is lower.
+export const maxQty = (product: Product) => Math.min(MAX_QTY, product.stock ?? MAX_QTY);
 
 export const productByName = (products: readonly Product[], name: string) => products.find((p) => p.name === name);
 

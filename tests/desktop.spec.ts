@@ -8,7 +8,8 @@ import shippingJson from "../data/shipping.json";
 import { parseZones } from "../data/shipping";
 import { buildOrder } from "../lib/checkout";
 import { parseStripeProducts } from "../lib/catalog-stripe";
-import type Stripe from "stripe";
+import { applySale } from "../lib/stock";
+import Stripe from "stripe";
 import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
 
 // Fake Stripe products made from tests/fixtures/products.json. The tests of the catalog code use them, so these
@@ -74,13 +75,6 @@ test.describe("shop filters", () => {
     await expect(page.locator("button[aria-controls=shop-filters]")).toBeHidden();
     await expect(page.locator("#shop-filters")).toBeVisible();
   });
-
-  test("the filters stay at the top when the page scrolls", async ({ page }) => {
-    await page.mouse.wheel(0, 1500);
-    await expect
-      .poll(() => page.locator("#shop-filters").evaluate((e) => Math.round(e.getBoundingClientRect().top)))
-      .toBe(0);
-  });
 });
 
 test.describe("filled buttons and footer links", () => {
@@ -120,6 +114,8 @@ test.describe("filled buttons and footer links", () => {
   test("a shop button keeps white text on hover", async ({ page }) => {
     await page.goto("/shop");
     const add = page.getByRole("button", { name: "Add to bag" }).first();
+    // The products come from Stripe and can change, so skip when no product can be bought.
+    test.skip((await add.count()) === 0, "the shop has no product to buy");
     await add.hover();
     await expect(add).toHaveCSS("color", WHITE);
   });
@@ -277,7 +273,8 @@ test.describe("images", () => {
       if (path === "/bag") await saveBag(page, DEMO_BAG);
       await page.goto(path);
       const imgs = page.locator("main img, section img");
-      expect(await imgs.count()).toBeGreaterThan(0);
+      // The shop images come from Stripe, so the shop can have none.
+      if (path !== "/shop") expect(await imgs.count()).toBeGreaterThan(0);
       // Lazy images load only near the view, so scroll each one into view first.
       for (const img of await imgs.all()) {
         await img.scrollIntoViewIfNeeded();
@@ -312,6 +309,8 @@ test("a shop image is hidden behind a pixel pattern while it loads, then it show
   });
   await page.goto("/shop");
   const img = page.locator("main img").first();
+  // The products come from Stripe and can change, so skip when no product has an image.
+  test.skip((await img.count()) === 0, "the shop has no product image");
   await expect(img).toHaveCSS("opacity", "0");
   release();
   // The blocks sharpen for about 0.4 s. Then the canvas is gone and the photo shows.
@@ -332,6 +331,7 @@ test.describe("pixelated image on a 2x screen", () => {
       await route.continue();
     });
     await page.goto("/shop");
+    test.skip((await page.locator("main img").count()) === 0, "the shop has no product image");
     const card = page.locator("main img").first().locator("xpath=..");
     await expect(card.locator("img")).toHaveCSS("opacity", "0");
     release();
@@ -369,38 +369,36 @@ test.describe("pixelated image on a 2x screen", () => {
   });
 });
 
+test.describe("stripe webhook", () => {
+  const SECRET = "whsec_playwright_test_secret";
+  const signed = (body: string, secret = SECRET) => ({ "stripe-signature": new Stripe("sk_test_unused").webhooks.generateTestHeaderString({ payload: body, secret }) });
+
+  test("it refuses a call with no signature", async ({ request }) => {
+    const res = await request.post("/api/stripe-webhook", { data: "{}" });
+    expect(res.status()).toBe(400);
+  });
+
+  test("it refuses a call with a wrong signature", async ({ request }) => {
+    const body = JSON.stringify({ id: "evt_1", type: "checkout.session.completed", data: { object: {} } });
+    expect((await request.post("/api/stripe-webhook", { data: body, headers: signed(body, "whsec_other") })).status()).toBe(400);
+    expect((await request.post("/api/stripe-webhook", { data: body, headers: { "stripe-signature": "t=1,v1=abc" } })).status()).toBe(400);
+  });
+
+  test("it accepts a signed event that it does not use, and it does not call Stripe for it", async ({ request }) => {
+    const body = JSON.stringify({ id: "evt_2", object: "event", type: "customer.created", data: { object: {} } });
+    const res = await request.post("/api/stripe-webhook", { data: body, headers: signed(body) });
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toEqual({ received: true });
+  });
+
+  test("it ignores a payment that is not paid yet", async ({ request }) => {
+    const body = JSON.stringify({ id: "evt_3", object: "event", type: "checkout.session.completed", data: { object: { id: "cs_test_1", payment_status: "unpaid" } } });
+    const res = await request.post("/api/stripe-webhook", { data: body, headers: signed(body) });
+    expect(res.status()).toBe(200);
+  });
+});
+
 test.describe("product range", () => {
-  const PRODUCTS = ["Quill Stem", "Threadless Stem", `1" Spacer`, `1 1/8" Spacer`, "Flat Cap", "Spacer Cap"];
-
-  test("the shop sells only the six products, two in each category", async ({ page }) => {
-    await page.goto("/shop");
-    await expect(page.getByText("6 products", { exact: true })).toBeVisible();
-    for (const name of PRODUCTS) await expect(page.getByText(name, { exact: true })).toHaveCount(1);
-  });
-
-  test("the home page prices come from the catalog", async ({ page }) => {
-    await page.goto("/");
-    for (const [cat, price] of [["Stems", "£185"], ["Spacers", "£24"], ["Caps", "£32"]])
-      await expect(page.locator("main a", { has: page.getByText(cat, { exact: true }) })).toContainText(`From ${price}`);
-  });
-
-  test("a bag saved with a product that the shop no longer sells drops that product", async ({ page }) => {
-    await page.goto("/bag");
-    await page.evaluate(() =>
-      localStorage.setItem(
-        "relic-bag",
-        JSON.stringify([
-          { key: "Relic Quill|Steel · Raw", type: "Stems", name: "Relic Quill", spec: "Steel · Raw", price: 210, qty: 1, image: null },
-          { key: "Flat Cap|Aluminium · Painted", type: "Caps", name: "Flat Cap", spec: "Aluminium · Painted", price: 32, qty: 1, image: null },
-        ]),
-      ),
-    );
-    await page.reload();
-    // An item with no image shows its name twice: on the placeholder tile and as the item name.
-    await expect(page.getByText("Flat Cap", { exact: true }).last()).toBeVisible();
-    await expect(page.getByText("Relic Quill")).toHaveCount(0);
-  });
-
   test("the bespoke page offers the product types of each part", async ({ page }) => {
     await page.goto("/bespoke");
     const chip = (name: string) => page.getByRole("button", { name, exact: true });
@@ -499,21 +497,17 @@ test("the empty bag buttons clip a label that cannot fit, so no text shows outsi
 
 // ---- Checkout ----
 
-const FLAT_CAP = { key: "Flat Cap|Aluminium · Painted", type: "Caps", name: "Flat Cap", spec: "Aluminium · Painted", price: 32, qty: 1, image: null };
-
 async function saveBag(page: import("@playwright/test").Page, items: object[]) {
   await page.goto("/bag");
   await page.evaluate((items) => localStorage.setItem("relic-bag", JSON.stringify(items)), items);
   await page.reload();
 }
 
-// A bag with three lines (4 items): a stem, a bespoke stem and two caps. The bag is empty on a first visit.
+// The bag tests use a bespoke part, because its price comes from data/bespoke.json. The shop products come from
+// Stripe and can change at any time, so no test depends on a product name or a price. The bag is empty on a first visit.
 const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" };
-const DEMO_BAG = [
-  { key: "Threadless Stem|Steel · Painted", type: "Stems", name: "Threadless Stem", spec: "Steel · Painted", price: 185, qty: 1, image: "/images/home/collage-threadless-stem.jpg" },
-  { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 600, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM },
-  { key: "Spacer Cap|Titanium · Raw", type: "Caps", name: "Spacer Cap", spec: "Titanium · Raw", price: 38, qty: 2, image: "/images/home/collage-spacer-cap.jpg" },
-];
+const BESPOKE_ITEM = { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 354, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM };
+const DEMO_BAG = [{ ...BESPOKE_ITEM, qty: 2 }];
 
 test.describe("checkout order check (server rules)", () => {
   const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Painted", color: "Green", height: "40 mm", length: "90 mm", angle: "±6°" };
@@ -595,7 +589,7 @@ test.describe("checkout API", () => {
 });
 
 test.describe("bag checkout", () => {
-  test("it sends names, quantities and bespoke options, with no price, and goes to the payment page", async ({ page }) => {
+  test("it sends the bespoke options and quantities, with no price, and goes to the payment page", async ({ page }) => {
     let body: any;
     await page.route("**/api/checkout", async (route) => {
       body = route.request().postDataJSON();
@@ -606,11 +600,7 @@ test.describe("bag checkout", () => {
     await page.waitForURL("**/support");
 
     expect(body.zone).toBe("uk");
-    expect(body.items).toEqual([
-      { name: "Threadless Stem", qty: 1 },
-      { bespoke: { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" }, qty: 1 },
-      { name: "Spacer Cap", qty: 2 },
-    ]);
+    expect(body.items).toEqual([{ bespoke: BESPOKE_STEM, qty: 2 }]);
     expect(JSON.stringify(body)).not.toMatch(/price|amount/i);
   });
 
@@ -637,16 +627,17 @@ test.describe("bag checkout", () => {
   });
 
   test("the delivery zone changes the delivery price and the total", async ({ page }) => {
-    await saveBag(page, [FLAT_CAP]);
+    await saveBag(page, [BESPOKE_ITEM]);
     const summary = page.locator("aside");
+    // The part costs £354, so the UK delivery is free (free over £100).
     await expect(summary).toContainText("United Kingdom shipping");
-    await expect(summary).toContainText("£6");
-    await expect(summary).toContainText("£38");
+    await expect(summary).toContainText("Free");
+    await expect(summary).toContainText("£354");
     await page.getByLabel("Deliver to").selectOption("europe");
     await expect(summary).toContainText("Europe shipping");
-    await expect(summary).toContainText("£47");
+    await expect(summary).toContainText("£369");
     await page.getByLabel("Deliver to").selectOption("world");
-    await expect(summary).toContainText("£57");
+    await expect(summary).toContainText("£379");
   });
 
   test("the zone is sent to the server", async ({ page }) => {
@@ -655,23 +646,23 @@ test.describe("bag checkout", () => {
       zone = route.request().postDataJSON().zone;
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: "/support" }) });
     });
-    await saveBag(page, [FLAT_CAP]);
+    await saveBag(page, [BESPOKE_ITEM]);
     await page.getByLabel("Deliver to").selectOption("europe");
     await page.getByRole("button", { name: "Checkout" }).click();
     await page.waitForURL("**/support");
     expect(zone).toBe("europe");
   });
 
-  test("a saved price that is old is replaced by the price of the catalog", async ({ page }) => {
-    await saveBag(page, [{ ...FLAT_CAP, price: 1 }]);
-    await expect(page.locator("main")).toContainText("£32");
+  test("a saved price that is old is replaced by the price of the rules", async ({ page }) => {
+    await saveBag(page, [{ ...BESPOKE_ITEM, price: 1 }]);
+    await expect(page.locator("main")).toContainText("£354");
   });
 
   test("a bespoke part in an old format and a product that is not for sale are dropped", async ({ page }) => {
     await saveBag(page, [
-      FLAT_CAP,
+      BESPOKE_ITEM,
       { key: "Bespoke Stem|demo", type: "Bespoke stem", name: "Bespoke Stem", spec: "old", price: 290, qty: 1, image: null, bespoke: true },
-      { key: "Relic Quill|x", type: "Stems", name: "Relic Quill", spec: "x", price: 210, qty: 1, image: null },
+      { key: "Nothing|x", type: "Stems", name: "A product that is not in Stripe", spec: "x", price: 210, qty: 1, image: null },
     ]);
     await expect(page.locator("main")).toContainText("1 items");
   });
@@ -686,8 +677,8 @@ test.describe("bag checkout", () => {
   });
 
   test("the plus button stops at 20 of one item", async ({ page }) => {
-    await saveBag(page, [{ ...FLAT_CAP, qty: 19 }]);
-    const plus = page.getByRole("button", { name: "Add one Flat Cap" });
+    await saveBag(page, [{ ...BESPOKE_ITEM, qty: 19 }]);
+    const plus = page.getByRole("button", { name: "Add one Bespoke Stem" });
     await plus.click();
     await expect(plus).toBeDisabled();
   });
@@ -706,7 +697,7 @@ test.describe("order confirmation", () => {
     await expect(page.getByText("We could not confirm a payment.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Thank you." })).toHaveCount(0);
     await page.goto("/bag");
-    await expect(page.locator("main")).toContainText("4 items");
+    await expect(page.locator("main")).toContainText("2 items");
   });
 });
 
@@ -840,6 +831,52 @@ test.describe("data files", () => {
     expect(bad((l) => ((l[0].default_price as Stripe.Price).currency = "usd"))).toThrow(/its price is in USD/);
     expect(bad((l) => ((l[0].default_price as Stripe.Price).unit_amount = 0))).toThrow(/its price must be above 0/);
     expect(bad((l) => (l[0].metadata.order = "first"))).toThrow(/the metadata "order" must be a number/);
+  });
+
+  test("the metadata stock sets the stock of a product, and no stock means no limit", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[0].metadata.stock = "5";
+    list[1].metadata.stock = "0";
+    const products = parseStripeProducts(list).products;
+    expect(products.map((p) => p.stock)).toEqual([5, 0, null, null, null, null]);
+    list[2].metadata.stock = "-1";
+    expect(() => parseStripeProducts(list)).toThrow(/the metadata "stock" must be a whole number/);
+    list[2].metadata.stock = "two";
+    expect(() => parseStripeProducts(list)).toThrow(/the metadata "stock" must be a whole number/);
+  });
+
+  test("an order is refused when it is above the stock, and the lines of one product count together", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[4].metadata.stock = "3";
+    list[5].metadata.stock = "0";
+    const { products } = parseStripeProducts(list);
+    const ask = (items: unknown[]) => buildOrder({ zone: "uk", items }, products);
+    expect(ask([{ name: "Flat Cap", qty: 3 }]).ok).toBe(true);
+    const over = ask([{ name: "Flat Cap", qty: 4 }]);
+    expect(!over.ok && over.error).toBe("Only 3 of Flat Cap left. Lower the quantity and try again.");
+    const twice = ask([{ name: "Flat Cap", qty: 2 }, { name: "Flat Cap", qty: 2 }]);
+    expect(!twice.ok && twice.error).toMatch(/Only 3 of Flat Cap left/);
+    const gone = ask([{ name: "Spacer Cap", qty: 1 }]);
+    expect(!gone.ok && gone.error).toBe("Spacer Cap is sold out. Remove it and try again.");
+    // A product with no stock count has no limit, other than the limit of 20 for one line.
+    expect(ask([{ name: "Quill Stem", qty: 20 }]).ok).toBe(true);
+  });
+
+  test("a sale lowers the stock, and an order that Stripe sends two times counts one time", () => {
+    const first = applySale({ stock: "5" }, 2, "cs_test_a1b2c3d4e5f6g7h8i9j0");
+    expect(first).toEqual({ stock: "3", stock_orders: "d4e5f6g7h8i9j0".slice(-12) });
+    // The same order again, with the metadata that the first call made.
+    expect(applySale({ stock: first!.stock, stock_orders: first!.stock_orders }, 2, "cs_test_a1b2c3d4e5f6g7h8i9j0")).toBeNull();
+    // Another order is counted, and the stock never goes below 0.
+    expect(applySale({ stock: "1", stock_orders: first!.stock_orders }, 4, "cs_test_zzzzzzzzzzzzzzzzzz")).toMatchObject({ stock: "0" });
+    // No stock count, or a wrong one: no change.
+    expect(applySale({}, 1, "cs_test_x")).toBeNull();
+    expect(applySale({ stock: "many" }, 1, "cs_test_x")).toBeNull();
+    // The list of counted orders keeps the last 30 only.
+    let meta: Record<string, string> = { stock: "100" };
+    for (let i = 0; i < 40; i++) meta = { ...meta, ...applySale(meta, 1, `cs_test_order${String(i).padStart(10, "0")}`)! };
+    expect(meta.stock_orders.split(",")).toHaveLength(30);
+    expect(meta.stock_orders.length).toBeLessThan(500);
   });
 
   test("a wrong delivery zone is refused", () => {

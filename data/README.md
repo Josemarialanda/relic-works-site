@@ -32,6 +32,7 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 | `material` | For example `Steel`. |
 | `finish` | For example `Painted`. |
 | `order` | Optional number. It sets the order of the "Featured" sort (lowest first). |
+| `stock` | Optional whole number: the items in stock. With no `stock`, the product has no limit. See "Stock" below. |
 
 - The product **name** must be different for each active product. A saved bag finds a product by its name.
 - The first **image** of the product is the shop image. Add it in the dashboard (Product → Images). Until it has an image, the shop shows a grey tile.
@@ -39,6 +40,18 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 - A wrong product (for example no `category`) stops the build with a message that names the product.
 - To remove a product from the shop, set it to inactive (archive it) in the dashboard.
 - The site needs `STRIPE_SECRET_KEY` to build and to run. There is no fallback.
+
+### Stock
+
+- Add the metadata `stock` (for example `5`) to a product to limit it. A product with no `stock` is never sold out.
+- With `stock` of `0`, the shop shows the product with "Sold out" and turns the button off. The bag drops a sold-out product.
+- The bag and the checkout do not allow more than the stock. The checkout reads the stock from Stripe at the moment of the order.
+- After each paid order, the webhook `app/api/stripe-webhook` lowers `stock` by the quantity sold. Stripe must call it:
+  see "Stock webhook" in `GO-LIVE.md` (live) and `.env.example` (the secret). The webhook also writes the metadata
+  `stock_orders`: do not change it. It stops an order that Stripe sends two times from being counted two times.
+- To add stock or to correct the count, change `stock` in the dashboard. A change shows in the shop in about a minute.
+- A refund or a cancelled order does **not** add the items back. Change `stock` by hand.
+- Limits: two customers who pay at the same moment for the last item can both succeed. Refund one order.
 
 ## shipping.json
 

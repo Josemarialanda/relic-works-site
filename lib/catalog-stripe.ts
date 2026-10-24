@@ -29,6 +29,8 @@ export function parseStripeProducts(stripeProducts: Stripe.Product[]): Catalog {
       if (!price.unit_amount || price.unit_amount <= 0) fail(p, "its price must be above 0.");
       const order = p.metadata.order === undefined ? Infinity : Number(p.metadata.order);
       if (Number.isNaN(order)) fail(p, `the metadata "order" must be a number, not "${p.metadata.order}".`);
+      const stock = p.metadata.stock?.trim();
+      if (stock !== undefined && !/^\d+$/.test(stock)) fail(p, `the metadata "stock" must be a whole number (0 or more), not "${stock}".`);
       const product: Product = {
         id: p.id,
         priceId: price.id,
@@ -38,6 +40,7 @@ export function parseStripeProducts(stripeProducts: Stripe.Product[]): Catalog {
         fin: meta(p, "finish"),
         price: price.unit_amount / 100,
         image: p.images[0] ?? null,
+        stock: stock === undefined ? null : Number(stock),
       };
       return { product, order };
     })

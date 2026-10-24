@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { getCatalog } from "@/lib/catalog-server";
+import { loadCatalog } from "@/lib/catalog-server";
 import { buildOrder } from "@/lib/checkout";
 import { getStripe } from "@/lib/stripe";
 
@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "The order is not valid." }, { status: 400 });
   }
 
-  const { products } = await getCatalog();
+  // Read the catalog with no cache, so the order sees the newest price and stock.
+  const { products } = await loadCatalog();
   const result = buildOrder(body, products);
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
   const { zone, lines, subtotal, shipping } = result.order;

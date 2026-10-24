@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { addToBag } from "@/lib/bag";
-import type { Product } from "@/lib/catalog";
+import { maxQty, type Product } from "@/lib/catalog";
 import { useCatalog } from "@/lib/catalog-context";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
@@ -132,13 +132,14 @@ export function Shop() {
             <div className={styles.products}>
               {g.items.map((p) => (
                 <div key={p.name} className={cx(layout.stack, layout.gap12)}>
-                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} image={p.image} />
+                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} image={p.image} soldOut={p.stock === 0} />
                   <button
                     type="button"
                     className={cx(button.button, button.small, button.block)}
-                    onClick={() => addToBag({ key: `${p.name}|${specOf(p)}`, type: p.cat, name: p.name, spec: specOf(p), price: p.price, image: p.image })}
+                    disabled={p.stock === 0}
+                    onClick={() => addToBag({ key: `${p.name}|${specOf(p)}`, type: p.cat, name: p.name, spec: specOf(p), price: p.price, image: p.image }, maxQty(p))}
                   >
-                    Add to bag
+                    {p.stock === 0 ? "Sold out" : "Add to bag"}
                   </button>
                 </div>
               ))}

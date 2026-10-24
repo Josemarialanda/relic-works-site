@@ -63,7 +63,7 @@ Before you go live, follow the checklist in `GO-LIVE.md`. These are the placehol
 - **Bespoke prices.** The rules in `data/bespoke.json` are placeholders (base price, material factor, extras for the bond, the finish and each custom size).
 - **Delivery.** The prices and the countries of each zone are in `data/shipping.json`. The support page and the bag read the same file.
 - **Tax and duties.** The checkout does not calculate VAT or import duties. The prices are the prices that the customer pays.
-- **Orders and stock.** There is no webhook, so the site does not send you an email, and it does not track stock. Add a Stripe webhook (`checkout.session.completed`) when you want either.
+- **Orders and stock.** The site does not send you an email for an order: read the orders in Stripe. The stock count goes down through the Stripe webhook (see `data/README.md` and `GO-LIVE.md`).
 - **Site address and share image.** Set `NEXT_PUBLIC_SITE_URL` in the production environment (see `.env.example`). The share image (`public/images/brand/og-image.svg`) needs a full address. Most apps (Facebook, X, LinkedIn, WhatsApp, iMessage) do **not** show an SVG: replace it with a PNG or JPG of 1200×630 and change `SHARE_IMAGE` in `app/layout.tsx`.
 - **Abuse.** The route has no rate limit. Add one (for example with Vercel Firewall) before you get real traffic.
 
