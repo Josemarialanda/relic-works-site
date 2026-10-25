@@ -2,9 +2,3 @@
 .story { padding: var(--spacing-40) var(--spacing-20); justify-content: space-between; gap: var(--spacing-40); }
 .storyBody { max-width: 420px; }
 .storyLink { padding-top: var(--spacing-12); }
-.newsPhoto { position: relative; flex: 1; min-height: 300px; }
-
-/* Phone */
-@media (max-width: 767px) {
-  .newsPhoto { min-height: 240px; }
-}

@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Collage } from "@/components/Collage";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { NewsletterForm } from "@/components/NewsletterForm";
-import { NewsRotator } from "@/components/NewsRotator";
 import { Photo } from "@/components/Photo";
 import { fromLabel } from "@/lib/catalog";
 import { getCatalog } from "@/lib/catalog-server";
@@ -76,16 +74,6 @@ export default async function HomePage() {
           </Link>
         </div>
         <Collage tiles={COLLAGE} columns={3} rowHeight={200} />
-      </section>
-
-      <section className={cx(layout.grid2, layout.ruleB)}>
-        <NewsRotator />
-        <div className={layout.stack}>
-          <div className={cx(layout.ruleB, styles.newsPhoto)}>
-            <Photo src="/images/home/news.jpg" alt="Parts on the workshop bench" sizes="(max-width: 767px) 100vw, 50vw" fill />
-          </div>
-          <NewsletterForm />
-        </div>
       </section>
     </main>
   );

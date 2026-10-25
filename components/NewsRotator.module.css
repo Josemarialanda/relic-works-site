@@ -1,9 +1,0 @@
-/* pan-y: a vertical drag scrolls the page, a horizontal drag is a swipe. */
-.news { display: flex; flex-direction: column; gap: var(--spacing-12); min-height: 460px; padding: var(--spacing-40) var(--spacing-20) var(--spacing-24); border-right: var(--rule); touch-action: pan-y; }
-.body { max-width: 480px; }
-.dots { margin-top: auto; padding-top: var(--spacing-24); }
-
-/* Phone */
-@media (max-width: 767px) {
-  .news { min-height: 360px; border-right: none; border-bottom: var(--rule); }
-}

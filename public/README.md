@@ -6,7 +6,7 @@ Put an image that only one component imports next to that component instead, and
 | Folder | Content |
 |---|---|
 | `images/brand/` | Logo, social share image, and other brand images. |
-| `images/home/` | Photos for the home page (hero slides, categories, news, collage). |
+| `images/home/` | Photos for the home page (hero slides, categories, collage). |
 | `images/bespoke/` | Photos for the bespoke configurator (stems, spacers, caps). |
 | `images/workshop/` | Photos for the workshop page (hero, process steps, collage). |
 | `icons/` | SVG icons and the favicon set. |
