@@ -37,7 +37,6 @@ const METAL: Record<string, string> = { Steel: "#8d9196", Titanium: "#77716c" };
 
 // The surface of each finish.
 const SURFACE: Record<string, { metalness: number; roughness: number }> = {
-  Raw: { metalness: 1, roughness: 0.62 },
   Brushed: { metalness: 1, roughness: 0.36 },
   Polished: { metalness: 1, roughness: 0.05 },
 };
@@ -85,9 +84,9 @@ export const FIRST_STEM: StemParams = {
   heightMm: 45,
   riseDeg: 0,
   color: METAL.Steel,
-  ...SURFACE.Raw,
-  brushed: false,
+  ...SURFACE.Brushed,
+  brushed: true,
   bond: "Brazed",
   material: "Steel",
-  finish: "Raw",
+  finish: "Brushed",
 };

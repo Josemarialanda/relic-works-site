@@ -263,7 +263,7 @@ test.describe("3D stem on the bespoke page", () => {
     await expect(model(page)).toHaveAttribute("data-length", "90");
     await expect(model(page)).toHaveAttribute("data-height", "45");
     await expect(model(page)).toHaveAttribute("data-angle", "0");
-    await expect(model(page)).toHaveAttribute("data-finish", "Raw");
+    await expect(model(page)).toHaveAttribute("data-finish", "Brushed");
     await expect(model(page)).toHaveAttribute("data-material", "Steel");
 
     // The material changes the colour of the metal, not the shape.
@@ -340,7 +340,7 @@ test.describe("3D stem on the bespoke page", () => {
 
   test("the material does not change the shape of the stem", async ({ page }) => {
     await page.goto("/bespoke");
-    await page.getByRole("button", { name: "Raw", exact: true }).click();
+    await page.getByRole("button", { name: "Polished", exact: true }).click();
     const area = async () => {
       await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
       return (await meanColor(page)).n;
@@ -372,13 +372,13 @@ test.describe("3D stem on the bespoke page", () => {
 
   test("the finish changes the pixels of the model", async ({ page }) => {
     await page.goto("/bespoke");
-    await expect(model(page)).toHaveAttribute("data-finish", "Raw");
+    await expect(model(page)).toHaveAttribute("data-finish", "Brushed");
     await page.waitForTimeout(500);
-    const raw = await meanColor(page);
-    expect(raw.n).toBeGreaterThan(1000);
+    const brushed = await meanColor(page);
+    expect(brushed.n).toBeGreaterThan(1000);
     await page.getByRole("button", { name: "Polished", exact: true }).click();
     await expect(model(page)).toHaveAttribute("data-finish", "Polished");
-    await expect.poll(async () => JSON.stringify((await meanColor(page)).rgb.map(Math.round)) !== JSON.stringify(raw.rgb.map(Math.round))).toBe(true);
+    await expect.poll(async () => JSON.stringify((await meanColor(page)).rgb.map(Math.round)) !== JSON.stringify(brushed.rgb.map(Math.round))).toBe(true);
   });
 
   test("the model stays inside its box for both types, the materials, and the shortest and the longest stem", async ({ page }) => {
@@ -732,11 +732,11 @@ async function saveBag(page: import("@playwright/test").Page, items: object[]) {
 // The bag tests use a bespoke part, because its price comes from data/bespoke.json. The shop products come from
 // Stripe and can change at any time, so no test depends on a product name or a price. The bag is empty on a first visit.
 const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "45 mm", length: "90 mm", angle: "17°" };
-const BESPOKE_ITEM = { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 354, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM };
+const BESPOKE_ITEM = { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 339, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM };
 const DEMO_BAG = [{ ...BESPOKE_ITEM, qty: 2 }];
 
 test.describe("checkout order check (server rules)", () => {
-  const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Raw", height: "45 mm", length: "90 mm", angle: "0°" };
+  const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Brushed", height: "45 mm", length: "90 mm", angle: "0°" };
 
   test("it prices catalogue items from the catalog and ignores a price from the browser", () => {
     const r = order({ zone: "uk", items: [{ name: "Flat Cap", qty: 2, price: 1, unitAmount: 1 }] });
@@ -750,7 +750,7 @@ test.describe("checkout order check (server rules)", () => {
     const r = order({ zone: "uk", items: [{ bespoke: { ...STEM, price: 1 }, qty: 1, price: 1 }] });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    // 220 × 1 (steel) × (1 + 0.10 brazed + 0 raw)
+    // 220 × 1 (steel) × (1 + 0.10 brazed + 0 brushed)
     expect(r.order.lines[0].unitAmount).toBe(24200);
     expect(r.order.lines[0].bespoke).toEqual(STEM);
   });
@@ -770,7 +770,7 @@ test.describe("checkout order check (server rules)", () => {
     }
     // Spacers: 2.5–100 mm. Caps (the integrated spacer): 2.5–10 mm.
     const part = (p: string, type: string, height: string) =>
-      order({ zone: "uk", items: [{ bespoke: { part: p, type, material: "Steel", finish: "Raw", height }, qty: 1 }] }).ok;
+      order({ zone: "uk", items: [{ bespoke: { part: p, type, material: "Steel", finish: "Brushed", height }, qty: 1 }] }).ok;
     expect(part("spacers", '1 1/8"', "2.5 mm")).toBe(true);
     expect(part("spacers", '1 1/8"', "100 mm")).toBe(true);
     expect(part("spacers", '1 1/8"', "2 mm")).toBe(false);
@@ -812,7 +812,7 @@ test.describe("checkout order check (server rules)", () => {
       // Brazing is steel only.
       { zone: "uk", items: [{ bespoke: { ...STEM, material: "Titanium" }, qty: 1 }] },
       // A flat cap has no height.
-      { zone: "uk", items: [{ bespoke: { part: "caps", type: "Flat cap", material: "Steel", finish: "Raw", height: "5 mm" }, qty: 1 }] },
+      { zone: "uk", items: [{ bespoke: { part: "caps", type: "Flat cap", material: "Steel", finish: "Brushed", height: "5 mm" }, qty: 1 }] },
       // The page has no painted finish.
       { zone: "uk", items: [{ bespoke: { ...STEM, finish: "Painted", color: "Green" }, qty: 1 }] },
       { zone: "uk", items: Array.from({ length: 51 }, () => ({ name: "Flat Cap", qty: 1 })) },
@@ -888,15 +888,15 @@ test.describe("bag checkout", () => {
   test("the delivery zone changes the delivery price and the total", async ({ page }) => {
     await saveBag(page, [BESPOKE_ITEM]);
     const summary = page.locator("aside");
-    // The part costs £354, so the UK delivery is free (free over £100).
+    // The part costs £339, so the UK delivery is free (free over £100).
     await expect(summary).toContainText("United Kingdom shipping");
     await expect(summary).toContainText("Free");
-    await expect(summary).toContainText("£354");
+    await expect(summary).toContainText("£339");
     await page.getByLabel("Deliver to").selectOption("europe");
     await expect(summary).toContainText("Europe shipping");
-    await expect(summary).toContainText("£369");
+    await expect(summary).toContainText("£354");
     await page.getByLabel("Deliver to").selectOption("world");
-    await expect(summary).toContainText("£379");
+    await expect(summary).toContainText("£364");
   });
 
   test("the zone is sent to the server", async ({ page }) => {
@@ -914,7 +914,7 @@ test.describe("bag checkout", () => {
 
   test("a saved price that is old is replaced by the price of the rules", async ({ page }) => {
     await saveBag(page, [{ ...BESPOKE_ITEM, price: 1 }]);
-    await expect(page.locator("main")).toContainText("£354");
+    await expect(page.locator("main")).toContainText("£339");
   });
 
   test("a bespoke part in an old format and a product that is not for sale are dropped", async ({ page }) => {
@@ -964,20 +964,20 @@ test.describe("bespoke order", () => {
   test("the price follows the options, and the button adds the part to the bag", async ({ page }) => {
     await page.goto("/bespoke");
     const price = page.getByText("Your price").locator("..").locator(".subheading");
-    // Steel, brazed, raw: 220 × 1.1
+    // Steel, brazed, brushed: 220 × 1.1
     await expect(price).toHaveText("£242");
     await page.getByRole("button", { name: "Polished", exact: true }).click();
-    await expect(price).toHaveText("£275");
+    await expect(price).toHaveText("£264");
     await page.getByRole("button", { name: "Titanium", exact: true }).click();
-    // Titanium is not steel, so the bond is welded (no brazing extra): 220 × 1.4 × 1.15
-    await expect(price).toHaveText("£354");
+    // Titanium is not steel, so the bond is welded (no brazing extra): 220 × 1.4 × 1.1
+    await expect(price).toHaveText("£339");
 
     await page.getByRole("button", { name: "Add to bag" }).click();
     await expect(page.getByRole("status")).toContainText("Added to your bag");
     await page.getByRole("link", { name: "View bag" }).click();
     await expect(page.locator("main")).toContainText("Bespoke Stem");
     await expect(page.locator("main")).toContainText("Threadless · Titanium · Welded · Polished · 45 mm height · 90 mm · 0°");
-    await expect(page.locator("main")).toContainText("£354");
+    await expect(page.locator("main")).toContainText("£339");
   });
 
   test("the custom size sliders have the limits", async ({ page }) => {
@@ -1034,12 +1034,12 @@ test.describe("bespoke order", () => {
     await page.goto("/bespoke");
     await page.getByRole("button", { name: "Caps", exact: true }).click();
     const price = page.getByText("Your price").locator("..").locator(".subheading");
-    // Steel, raw: 40 × 1
+    // Steel, brushed: 40 × 1
     await expect(price).toHaveText("£40");
     await page.getByRole("button", { name: "Add to bag" }).click();
     await page.goto("/bag");
     await expect(page.locator("main")).toContainText("Bespoke Cap");
-    await expect(page.locator("main")).toContainText("Flat cap · Steel · Raw");
+    await expect(page.locator("main")).toContainText("Flat cap · Steel · Brushed");
   });
 });
 
@@ -1218,13 +1218,13 @@ test.describe("data files", () => {
 });
 
 test("the 3D stem takes its numbers from the options", () => {
-  const base = { part: "stems" as const, type: "Threadless", material: "Steel", finish: "Raw", bond: "Welded", height: "45 mm", length: "80 mm", angle: "17°" };
-  const raw = stemParams(base, FIRST_STEM);
-  expect(raw).toMatchObject({ type: "Threadless", lengthMm: 80, heightMm: 45, riseDeg: 17, bond: "Welded", finish: "Raw" });
-  // Bare metal shows the colour of the material.
-  expect(stemParams({ ...base, material: "Titanium" }, FIRST_STEM).color).not.toBe(raw.color);
-  expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).roughness).toBeLessThan(raw.roughness);
-  expect(stemParams({ ...base, finish: "Brushed" }, FIRST_STEM).brushed).toBe(true);
+  const base = { part: "stems" as const, type: "Threadless", material: "Steel", finish: "Brushed", bond: "Welded", height: "45 mm", length: "80 mm", angle: "17°" };
+  const stem = stemParams(base, FIRST_STEM);
+  expect(stem).toMatchObject({ type: "Threadless", lengthMm: 80, heightMm: 45, riseDeg: 17, bond: "Welded", finish: "Brushed" });
+  expect(stemParams({ ...base, material: "Titanium" }, FIRST_STEM).color).not.toBe(stem.color);
+  expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).roughness).toBeLessThan(stem.roughness);
+  expect(stem.brushed).toBe(true);
+  expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).brushed).toBe(false);
   // The material gives the colour of the bare metal, and nothing else.
   const metal = (material: string) => stemParams({ ...base, material }, FIRST_STEM);
   expect(metal("Steel")).toMatchObject({ material: "Steel" });
@@ -1232,12 +1232,12 @@ test("the 3D stem takes its numbers from the options", () => {
   expect({ ...metal("Titanium"), color: "", material: "" }).toEqual({ ...metal("Steel"), color: "", material: "" });
   // An angle can be negative, and a missing or wrong value keeps the value before.
   expect(stemParams({ ...base, angle: "-12°" }, FIRST_STEM).riseDeg).toBe(-12);
-  expect(stemParams({ ...base, length: "" }, raw).lengthMm).toBe(80);
-  expect(stemParams({ ...base, length: undefined, type: "Nonsense" }, raw)).toMatchObject({ lengthMm: 80, type: "Threadless" });
+  expect(stemParams({ ...base, length: "" }, stem).lengthMm).toBe(80);
+  expect(stemParams({ ...base, length: undefined, type: "Nonsense" }, stem)).toMatchObject({ lengthMm: 80, type: "Threadless" });
   // A spacer and a cap have their own height and type. The stem keeps its height.
-  const spacer = stemParams({ part: "spacers", type: '1"', material: "Steel", finish: "Raw", height: "12.5 mm" }, raw);
+  const spacer = stemParams({ part: "spacers", type: '1"', material: "Steel", finish: "Brushed", height: "12.5 mm" }, stem);
   expect(spacer).toMatchObject({ part: "spacers", spacerSize: '1"', partHeightMm: 12.5, heightMm: 45 });
-  const cap = stemParams({ part: "caps", type: "Flat cap", material: "Steel", finish: "Raw" }, spacer);
+  const cap = stemParams({ part: "caps", type: "Flat cap", material: "Steel", finish: "Brushed" }, spacer);
   expect(cap).toMatchObject({ part: "caps", capType: "Flat cap", partHeightMm: 12.5, spacerSize: '1"' });
 });
 

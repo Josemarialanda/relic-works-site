@@ -21,7 +21,6 @@ const MATERIALS = [
 ];
 
 const FINISHES = [
-  { name: "Raw", note: "Bare metal, waxed" },
   { name: "Brushed", note: "Satin grain, low sheen" },
   { name: "Polished", note: "Mirror finish" },
 ];

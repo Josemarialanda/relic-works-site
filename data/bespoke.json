@@ -21,15 +21,15 @@
   },
   "materials": ["Steel", "Titanium"],
   "bonds": ["Brazed", "Welded"],
-  "finishes": ["Raw", "Brushed", "Polished"],
+  "finishes": ["Brushed", "Polished"],
   "lengths": ["60 mm", "70 mm", "80 mm", "90 mm", "Custom"],
   "angles": ["-35°", "-17°", "0°", "17°", "35°", "Custom"],
-  "defaults": { "material": "Steel", "bond": "Brazed", "finish": "Raw", "length": "90 mm", "angle": "0°" },
+  "defaults": { "material": "Steel", "bond": "Brazed", "finish": "Brushed", "length": "90 mm", "angle": "0°" },
   "customRange": { "length": [60, 130], "angle": [-35, 35] },
   "pricing": {
     "materialFactor": { "Steel": 1, "Titanium": 1.4 },
     "bondExtra": { "Brazed": 0.1, "Welded": 0 },
-    "finishExtra": { "Raw": 0, "Brushed": 0.05, "Polished": 0.15 },
+    "finishExtra": { "Brushed": 0, "Polished": 0.1 },
     "customExtra": 0.1
   }
 }
