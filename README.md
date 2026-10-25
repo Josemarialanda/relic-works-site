@@ -73,3 +73,24 @@ The GitHub workflow in `.github/workflows/deploy.yml` deploys to Vercel:
 
 - A push to `main` makes a production deployment.
 - A pull request makes a preview deployment and adds a comment with the URL.
+
+### Pause and unpause the site
+
+Pause the project to take the site off line for a time. While the project is paused, `relic-works.com` gives a 503
+error page (`DEPLOYMENT_PAUSED`). Pausing deletes no deployment and keeps the domains, and unpausing brings back the
+last production deployment. The Vercel dashboard has no pause button, so use the Vercel CLI.
+
+To pause the site, run this command. It asks you to type the project name to confirm:
+
+```sh
+npx vercel project pause relic-works-site
+```
+
+To unpause the site, run this command:
+
+```sh
+npx vercel api /v1/projects/relic-works-site/unpause --method POST
+```
+
+To check the result, run `curl -sI https://relic-works.com/`. A paused site gives `HTTP/2 503` and
+`x-vercel-error: DEPLOYMENT_PAUSED`.
