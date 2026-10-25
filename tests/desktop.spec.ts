@@ -9,7 +9,7 @@ import { parseZones } from "../data/shipping";
 import { buildOrder } from "../lib/checkout";
 import { parseStripeProducts } from "../lib/catalog-stripe";
 import { applySale } from "../lib/stock";
-import { slugify } from "../lib/catalog";
+import { slugify, specOf } from "../lib/catalog";
 import { FIRST_STEM, stemParams } from "../lib/stem-model";
 import { minClampHeightMm } from "../lib/stem-geometry";
 import Stripe from "stripe";
@@ -909,6 +909,13 @@ test.describe("bag checkout", () => {
     await expect(page.locator("main")).toContainText("1 items");
   });
 
+  test("a bespoke part saved with the old labels shows Bespoke and the part name", async ({ page }) => {
+    await saveBag(page, [BESPOKE_ITEM]);
+    await expect(page.locator("main").getByText("Bespoke", { exact: true })).toBeVisible();
+    await expect(page.locator("main").getByText("Stem", { exact: true })).toBeVisible();
+    await expect(page.locator("main")).not.toContainText(/Bespoke stem/i);
+  });
+
   test("the bag is empty on a first visit", async ({ page }) => {
     await page.goto("/");
     expect(await page.evaluate(() => localStorage.getItem("relic-bag"))).toBeNull();
@@ -920,7 +927,7 @@ test.describe("bag checkout", () => {
 
   test("the plus button stops at 20 of one item", async ({ page }) => {
     await saveBag(page, [{ ...BESPOKE_ITEM, qty: 19 }]);
-    const plus = page.getByRole("button", { name: "Add one Bespoke Stem" });
+    const plus = page.getByRole("button", { name: "Add one Stem" });
     await plus.click();
     await expect(plus).toBeDisabled();
   });
@@ -958,7 +965,10 @@ test.describe("bespoke order", () => {
     await page.getByRole("button", { name: "Add to bag" }).click();
     await expect(page.getByRole("status")).toContainText("Added to your bag");
     await page.getByRole("link", { name: "View bag" }).click();
-    await expect(page.locator("main")).toContainText("Bespoke Stem");
+    // The category is only "Bespoke", and the name is the part.
+    await expect(page.locator("main").getByText("Bespoke", { exact: true })).toBeVisible();
+    await expect(page.locator("main").getByText("Stem", { exact: true })).toBeVisible();
+    await expect(page.locator("main")).not.toContainText("Bespoke Stem");
     await expect(page.locator("main")).toContainText("Threadless · Titanium · Welded · Polished · 45 mm height · 90 mm · 0°");
     await expect(page.locator("main")).toContainText("£339");
   });
@@ -1045,7 +1055,7 @@ test.describe("bespoke order", () => {
     await expect(price).toHaveText("£40");
     await page.getByRole("button", { name: "Add to bag" }).click();
     await page.goto("/bag");
-    await expect(page.locator("main")).toContainText("Bespoke Cap");
+    await expect(page.locator("main").getByText("Cap", { exact: true })).toBeVisible();
     await expect(page.locator("main")).toContainText("Flat cap · Steel · Brushed");
   });
 });
@@ -1112,6 +1122,17 @@ test.describe("data files", () => {
     expect(product.price).toBe(19.99);
     const r = buildOrder({ zone: "uk", items: [{ name: "Flat Cap", qty: 1 }] }, [product]);
     expect(r.ok && r.order.lines[0].unitAmount).toBe(1999);
+  });
+
+  test("the bonding method of a stem is in its spec, between the material and the finish", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[0].metadata = { ...list[0].metadata, bonding_method: " Brazed " };
+    const [stem, other] = parseStripeProducts(list).products;
+    expect(stem.bond).toBe("Brazed");
+    expect(specOf(stem)).toBe(`${stem.mat} · Brazed · ${stem.fin}`);
+    // A product with no bonding method (a spacer or a cap) has only the material and the finish.
+    expect(other.bond).toBeNull();
+    expect(specOf(other)).toBe(`${other.mat} · ${other.fin}`);
   });
 
   test("a product with no image yet is in the catalog with a null image", () => {

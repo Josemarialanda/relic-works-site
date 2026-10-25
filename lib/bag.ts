@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { PART_NAME } from "../data/bespoke";
 import { bespokePrice, bespokeSpec, parseBespoke, type BespokeConfig } from "./bespoke";
-import { MAX_QTY, maxQty, productByName, type Product } from "./catalog";
+import { MAX_QTY, maxQty, productByName, specOf, type Product } from "./catalog";
 import { useCatalog } from "./catalog-context";
 export { gbp } from "./money";
 
@@ -25,8 +25,8 @@ export function bespokeBagItem(config: BespokeConfig): Omit<BagItem, "qty"> {
   const spec = bespokeSpec(config);
   return {
     key: `Bespoke ${config.part}|${spec}`,
-    type: `Bespoke ${PART_NAME[config.part].toLowerCase()}`,
-    name: `Bespoke ${PART_NAME[config.part]}`,
+    type: "Bespoke",
+    name: PART_NAME[config.part],
     spec,
     price: bespokePrice(config),
     image: `/images/bespoke/${config.part}.jpg`,
@@ -68,7 +68,9 @@ function current(item: BagItem, products: readonly Product[]): BagItem | null {
   // A product that is sold out is dropped, like a product that is not for sale.
   if (product?.stock === 0) return null;
   const price = bespoke ? bespokePrice(bespoke) : product!.price;
-  return { ...item, price, qty: Math.min(item.qty, product ? maxQty(product) : MAX_QTY), ...(bespoke ? { bespoke, image: bespokeImage(item.image, bespoke) } : {}) };
+  // The labels come from the part or the product now, so a bag saved with older labels shows the new ones.
+  const labels = bespoke ? { type: "Bespoke", name: PART_NAME[bespoke.part], image: bespokeImage(item.image, bespoke) } : { type: product!.cat, spec: specOf(product!) };
+  return { ...item, price, qty: Math.min(item.qty, product ? maxQty(product) : MAX_QTY), ...labels, ...(bespoke ? { bespoke } : {}) };
 }
 
 // useSyncExternalStore needs a stable snapshot, so parse only when the raw value changes.

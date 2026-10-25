@@ -1,6 +1,6 @@
 // Turn the Stripe products into the catalog. A Stripe product is a shop product when it is active, it has a
 // default price in pounds, and its metadata has `category`, `material` and `finish`. The optional metadata
-// `order` (a number) sets the order of the "Featured" sort. The first image of the product is the shop image.
+// `order` (a number) sets the order of the "Featured" sort, and `bonding_method` (stems) tells how the parts are joined. The first image of the product is the shop image.
 // A wrong product stops the build with a message that names the product, so a visitor never sees the error.
 
 import type Stripe from "stripe";
@@ -40,6 +40,7 @@ export function parseStripeProducts(stripeProducts: Stripe.Product[]): Catalog {
         cat: meta(p, "category"),
         mat: meta(p, "material"),
         fin: meta(p, "finish"),
+        bond: p.metadata.bonding_method?.trim() || null,
         price: price.unit_amount / 100,
         image: p.images[0] ?? null,
         stock: stock === undefined ? null : Number(stock),

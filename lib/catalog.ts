@@ -20,6 +20,9 @@ export type Product = {
   cat: Category;
   mat: Material;
   fin: Finish;
+  // How the parts are joined (for example "Brazed" or "Welded"), from the metadata `bonding_method`. It is null for a
+  // product that has no joints (a spacer or a cap).
+  bond: string | null;
   // In pounds.
   price: number;
   // The first image of the Stripe product, or null when it has none yet.
@@ -36,8 +39,8 @@ export const maxQty = (product: Product) => Math.min(MAX_QTY, product.stock ?? M
 // The name in lower case, with a hyphen between the words: "1 1/8\" Spacer" gives "1-1-8-spacer".
 export const slugify = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-// The material and the finish, as the bag and the shop show them.
-export const specOf = (p: Product) => `${p.mat} · ${p.fin}`;
+// The material, the bonding method (when the product has one) and the finish, as the bag and the shop show them.
+export const specOf = (p: Product) => [p.mat, p.bond, p.fin].filter(Boolean).join(" · ");
 
 export const productBySlug = (products: readonly Product[], slug: string) => products.find((p) => p.slug === slug);
 
