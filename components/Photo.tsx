@@ -18,6 +18,8 @@ type Props = {
   // Show a pixel pattern while the photo loads, then sharpen the photo in steps. It works for "cover" only.
   pixelate?: boolean;
   className?: string;
+  // The quality of the optimised file. It must be in images.qualities in next.config.ts. The default is 75.
+  quality?: number;
 };
 
 // The number of pixel blocks across the photo at each step, and the time of one step.
@@ -47,7 +49,7 @@ function drawPixels(canvas: HTMLCanvasElement, img: HTMLImageElement, blocks: nu
 }
 
 // A photo from public/images (or a full address) that fills its box. The bone tile shows while the photo loads.
-export function Photo({ src, alt, fill = false, fit = "cover", sizes = "100vw", preload, pixelate = false, className }: Props) {
+export function Photo({ src, alt, fill = false, fit = "cover", sizes = "100vw", preload, pixelate = false, className, quality }: Props) {
   const animate = pixelate && fit === "cover";
   const [phase, setPhase] = useState<Phase>(animate ? "loading" : "done");
   const imgRef = useRef<HTMLImageElement>(null);
@@ -84,6 +86,7 @@ export function Photo({ src, alt, fill = false, fit = "cover", sizes = "100vw", 
         alt={alt}
         fill
         sizes={sizes}
+        quality={quality}
         preload={preload}
         onLoad={animate ? loaded : undefined}
       />

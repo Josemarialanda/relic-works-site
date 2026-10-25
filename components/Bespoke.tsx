@@ -193,7 +193,7 @@ export function Bespoke() {
               canvasRef={modelCanvas}
             />
           ) : (
-            <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 50vw" fill />
+            <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 50vw" quality={90} fill />
           )}
         </div>
 

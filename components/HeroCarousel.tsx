@@ -51,7 +51,7 @@ export function HeroCarousel() {
       {SLIDES.map((s, i) => (
         <div key={s.name} className={styles.slide} style={{ opacity: i === cur ? 1 : 0 }}>
           {/* The first slide shows at load, so load it first. */}
-          <Photo src={s.image} alt={s.alt} preload={i === 0} />
+          <Photo src={s.image} alt={s.alt} preload={i === 0} quality={90} />
         </div>
       ))}
       <div className={cx("meta-b", styles.kicker)}>

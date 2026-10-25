@@ -38,7 +38,7 @@ export default async function HomePage() {
           <a key={c.name} className={cx(layout.stack, i < 2 && layout.ruleR)} href={`/shop#${c.name}`}>
             <div className={layout.ratio43}>
               {/* The category name is the link text, so the photo has no alt text. */}
-              <Photo src={c.image} alt="" sizes="(max-width: 767px) 100vw, 33vw" />
+              <Photo src={c.image} alt="" sizes="(max-width: 767px) 100vw, 33vw" quality={90} />
             </div>
             <div className={cx(layout.cell, layout.between)}>
               <span className="subheading">{c.name}</span>
