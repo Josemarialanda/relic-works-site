@@ -9,4 +9,10 @@
 /* next/font loads Inter and sets --font-inter-next on <html>. */
 :root {
   --font-inter: var(--font-inter-next), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* The height of the sticky header. TopNav sets the real value (the header is higher on a phone, where the links
+     wrap); this is the value before the script runs. Other sticky parts stop under the header. */
+  --header-height: var(--nav-height);
 }
+
+/* A link to an anchor (for example /support#shipping) scrolls the target to just under the sticky header. */
+html { scroll-padding-top: var(--header-height); }

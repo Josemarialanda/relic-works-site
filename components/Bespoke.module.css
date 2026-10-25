@@ -5,7 +5,7 @@
 
 /* The 3D view stays at the top of the window while the options scroll past, also on a phone. It has the page
    colour, so the options do not show through it. */
-.photo { position: sticky; top: 0; z-index: 2; align-self: start; height: 520px; overflow: hidden; background: var(--color-paper-white); }
+.photo { position: sticky; top: var(--header-height); z-index: 2; align-self: start; height: 520px; overflow: hidden; background: var(--color-paper-white); }
 /* The divider is on the options column, not on the 3D view, so it goes the full height of the section. */
 .options { padding: var(--spacing-40); border-left: var(--rule); }
 .lockNote { font-weight: var(--font-weight-regular); }

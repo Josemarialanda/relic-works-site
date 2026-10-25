@@ -1,4 +1,5 @@
-.nav { display: flex; align-items: center; gap: var(--spacing-36); height: var(--nav-height); padding: 0 var(--spacing-20); border-bottom: var(--rule); }
+/* The header stays at the top of the window while the page scrolls. It is above the other sticky parts. */
+.nav { position: sticky; top: 0; z-index: 10; background: var(--surface-page-canvas); display: flex; align-items: center; gap: var(--spacing-36); height: var(--nav-height); padding: 0 var(--spacing-20); border-bottom: var(--rule); }
 .brand { display: inline-flex; align-items: center; }
 .logo { display: block; width: auto; height: 20px; }
 .links { display: flex; gap: var(--spacing-20); flex: 1; }

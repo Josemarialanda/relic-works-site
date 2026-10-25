@@ -22,7 +22,8 @@ export function SupportNav() {
 
   const scrollTo = useCallback((id: SectionId) => {
     const el = document.getElementById(id);
-    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: "smooth" });
+    // scrollIntoView keeps the scroll-padding-top of the page, so the section stops under the sticky header.
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
     setActive(id);
   }, []);
 

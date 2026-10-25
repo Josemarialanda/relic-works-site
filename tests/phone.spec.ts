@@ -252,15 +252,31 @@ test.describe("stem calculator", () => {
   });
 });
 
-test("the 3D view of the bespoke page stays at the top of the window while the options scroll", async ({ page }) => {
+test("the 3D view of the bespoke page stays under the header while the options scroll", async ({ page }) => {
   await page.goto("/bespoke");
   const view = page.locator("#configure > div").first();
   await page.getByRole("button", { name: "Add to bag" }).scrollIntoViewIfNeeded();
+  const header = (await page.locator("header").boundingBox())!;
   const box = (await view.boundingBox())!;
-  expect(box.y).toBe(0);
+  expect(header.y).toBe(0);
+  expect(Math.abs(box.y - (header.y + header.height))).toBeLessThanOrEqual(1);
   expect(box.height).toBeGreaterThan(200);
   // The options scroll under it, not over it.
   expect(await view.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+});
+
+test("the header stays at the top of the window when the page scrolls", async ({ page }) => {
+  await page.goto("/bespoke");
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(page.locator("header")).toBeInViewport();
+  expect((await page.locator("header").boundingBox())!.y).toBe(0);
+});
+
+test("a link to a support section scrolls it to just under the header", async ({ page }) => {
+  await page.goto("/support");
+  await page.locator("footer").getByRole("link", { name: "Shipping & returns" }).click();
+  const header = (await page.locator("header").boundingBox())!;
+  await expect.poll(async () => Math.abs((await page.locator("#shipping").boundingBox())!.y - header.height)).toBeLessThanOrEqual(2);
 });
 
 test("the bespoke page does not scroll sideways", async ({ page }) => {

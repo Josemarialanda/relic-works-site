@@ -14,7 +14,7 @@
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .withSidebar { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
-.sticky { position: sticky; top: 0; }
+.sticky { position: sticky; top: var(--header-height); }
 
 .cell { padding: var(--card-padding); }
 .sectionHead { display: flex; justify-content: space-between; align-items: baseline; padding: var(--spacing-24) var(--spacing-20); border-bottom: var(--rule); }

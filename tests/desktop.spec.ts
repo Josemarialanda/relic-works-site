@@ -1052,6 +1052,16 @@ test("the pages have the share image in the metadata, with a full address", asyn
   expect((await request.get("/images/brand/og-image.svg")).status()).toBe(200);
 });
 
+test("the header stays at the top of the window when the page scrolls, and the 3D view stops under it", async ({ page }) => {
+  await page.goto("/bespoke");
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const header = (await page.locator("header").boundingBox())!;
+  expect(header.y).toBe(0);
+  await expect(page.locator("header").getByRole("link", { name: "Shop" })).toBeInViewport();
+  const view = (await page.locator("#configure > div").first().boundingBox())!;
+  expect(Math.abs(view.y - (header.y + header.height))).toBeLessThanOrEqual(1);
+});
+
 test("the footer is at the bottom of the window on a short page, and at the end of a long page", async ({ page }) => {
   await expectFooterAtBottom(page);
 });
