@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Grenze_Gotisch, IM_Fell_English_SC, Inter } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { getCatalog } from "@/lib/catalog-server";
 import { CatalogProvider } from "@/lib/catalog-context";
 import { TopNav } from "@/components/TopNav";
+import { cx } from "@/lib/cx";
 import "./globals.css";
 import styles from "./layout.module.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "700"], variable: "--font-inter-next" });
+// The medieval faces of the home hero: a blackletter for the titles and old-style small capitals for the text.
+const blackletter = Grenze_Gotisch({ subsets: ["latin"], weight: "800", variable: "--font-blackletter" });
+const fell = IM_Fell_English_SC({ subsets: ["latin"], weight: "400", variable: "--font-fell" });
 
 // The address of the site. The share image needs a full address, so the metadata needs a base. Set
 // NEXT_PUBLIC_SITE_URL (for example https://relicworks.co.uk). Without it, the build uses the production
@@ -33,7 +37,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const catalog = await getCatalog();
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={cx(inter.variable, blackletter.variable, fell.variable)}>
       <body>
         <CatalogProvider catalog={catalog}>
           <div className={styles.page}>

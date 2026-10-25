@@ -75,31 +75,62 @@ test.describe("shop filters", () => {
   });
 });
 
+test("a click anywhere on the hero opens the page of the current slide", async ({ page }) => {
+  const pages = [/\/shop#Stems$/, /\/shop#Spacers$/, /\/shop#Caps$/, /\/bespoke$/];
+  for (const [i, url] of pages.entries()) {
+    await page.goto("/");
+    const hero = page.locator("section").first();
+    await heroDots(page).nth(i).click();
+    const box = (await hero.boundingBox())!;
+    // A point on the image, away from the kicker, the logo and the dots.
+    await page.mouse.click(box.x + box.width * 0.6, box.y + box.height * 0.4);
+    await expect(page).toHaveURL(url);
+  }
+});
+
+test("the hero text is between the parts of the wide drawing, and the title fits", async ({ page }) => {
+  for (const width of [600, 768, 1023, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const hero = page.locator("section").first();
+    await expect.poll(() => hero.locator("img").first().evaluate((i: HTMLImageElement) => i.currentSrc)).toMatch(/hero-stems\.jpg/);
+    const box = (await hero.boundingBox())!;
+    // The drawing (2752 x 1536) covers the hero. The parts are in x 0.16-0.37 and 0.63-0.84 of the drawing.
+    const drawing = Math.max(box.width, (box.height * 2752) / 1536);
+    const left = box.x + (box.width - drawing) / 2;
+    for (let i = 0; i < 4; i++) {
+      await heroDots(page).nth(i).click();
+      const text = (await hero.locator("p").first().locator("..").boundingBox())!;
+      expect(text.x, `at ${width}px, slide ${i}`).toBeGreaterThanOrEqual(left + 0.37 * drawing);
+      expect(text.x + text.width, `at ${width}px, slide ${i}`).toBeLessThanOrEqual(left + 0.63 * drawing);
+      const title = hero.locator("p").first();
+      expect(await title.evaluate((e) => e.scrollWidth <= e.clientWidth), `at ${width}px, slide ${i}`).toBe(true);
+    }
+  }
+});
+
+test("the hero text uses the medieval fonts, and a slide with no price has no separator", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.locator("section").first();
+  await expect(hero.locator("p").nth(0)).toHaveCSS("font-family", /Grenze Gotisch/);
+  await expect(hero.locator("p").nth(1)).toHaveCSS("font-family", /IM Fell English SC/);
+  for (let i = 0; i < 4; i++) {
+    await heroDots(page).nth(i).click();
+    expect((await hero.locator("p").nth(2).innerText()).trim()).not.toMatch(/·$/);
+  }
+});
+
+test("the hero has no buttons, only one link with the name of the current slide", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.locator("section").first();
+  await expect(hero.locator("a")).toHaveCount(1);
+  await expect(hero.getByRole("link", { name: "Shop stems", exact: true })).toBeVisible();
+  await heroDots(page).nth(3).click();
+  await expect(hero.getByRole("link", { name: "Configure your own", exact: true })).toBeVisible();
+});
+
 test.describe("filled buttons and footer links", () => {
   const WHITE = "rgb(255, 255, 255)";
-
-  test("the hero CTA keeps white text on a black background on hover and while pressed", async ({ page }) => {
-    await page.goto("/");
-    const cta = page.locator("section").first().locator("a").first();
-    await expect(cta).toHaveCSS("color", WHITE);
-
-    await cta.hover();
-    await expect(cta).toHaveCSS("color", WHITE);
-    await expect(cta).toHaveCSS("background-color", "rgb(0, 0, 0)");
-
-    // The design system has no colour change, so a press must not make the button gray.
-    await page.mouse.down();
-    await expect(cta).toHaveCSS("color", WHITE);
-    await expect(cta).toHaveCSS("opacity", "1");
-    await page.mouse.up();
-  });
-
-  test("the outline CTA keeps black text on hover", async ({ page }) => {
-    await page.goto("/");
-    const cta = page.locator("section").first().locator("a").nth(1);
-    await cta.hover();
-    await expect(cta).toHaveCSS("color", "rgb(0, 0, 0)");
-  });
 
   test("a footer link keeps its colour on hover", async ({ page }) => {
     await page.goto("/");
@@ -618,23 +649,6 @@ test.describe("product range", () => {
     await chip("Spacer cap").click();
     await expect(page.getByText("Integrated spacer height")).toBeVisible();
   });
-});
-
-test("the hero buttons have the same width as each other on every slide", async ({ page }) => {
-  for (const width of [320, 430, 600, 820, 1280, 1680]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
-    const hero = page.locator("section").first();
-    const ctas = hero.locator(`a[class*="button"]`);
-    const widths = new Set<number>();
-    for (const [i, name] of ["Shop stems", "Shop spacers", "Shop caps"].entries()) {
-      await hero.locator("button[title]").nth(i).click();
-      // Only the label of the current slide is in the accessible name.
-      await expect(hero.getByRole("link", { name, exact: true })).toBeVisible();
-      for (const box of await Promise.all((await ctas.all()).map((a) => a.boundingBox()))) widths.add(Math.round(box!.width));
-    }
-    expect([...widths], `at ${width}px`).toHaveLength(1);
-  }
 });
 
 test("the empty bag buttons fit in their column and have the same width", async ({ page }) => {

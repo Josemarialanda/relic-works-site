@@ -20,7 +20,7 @@ test.describe("hero carousel", () => {
     const start = await heroSlide(page);
 
     await swipe(page, { x: box.x + 300, y }, { x: box.x + 60, y });
-    await expect.poll(() => heroSlide(page)).toBe((start + 1) % 3);
+    await expect.poll(() => heroSlide(page)).toBe((start + 1) % 4);
 
     await swipe(page, { x: box.x + 60, y }, { x: box.x + 300, y });
     await expect.poll(() => heroSlide(page)).toBe(start);
@@ -36,10 +36,10 @@ test.describe("hero carousel", () => {
     await lift();
   });
 
-  test("a swipe that starts on a CTA does not open the link", async ({ page }) => {
-    const cta = (await page.locator("section").first().locator("a").first().boundingBox())!;
-    const x = cta.x + cta.width / 2;
-    const y = cta.y + cta.height / 2;
+  test("a swipe on the hero does not open the link of the slide", async ({ page }) => {
+    const box = (await page.locator("section").first().boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + 150;
     await swipe(page, { x: x + 80, y }, { x: x - 80, y });
     await page.waitForTimeout(500);
     await expect(page).toHaveURL("/");
@@ -67,26 +67,40 @@ test.describe("hero carousel", () => {
   });
 });
 
-test.describe("hero layout", () => {
-  type Box = { x: number; y: number; width: number; height: number };
-  const overlaps = (a: Box, b: Box) =>
-    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+test("below 600px the hero shows the tall drawing, with the text above the parts", async ({ page }) => {
+  for (const width of [320, 390, 599]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const hero = page.locator("section").first();
+    await expect.poll(() => hero.locator("img").first().evaluate((i: HTMLImageElement) => i.currentSrc)).toMatch(/hero-stems-tall\.jpg/);
+    const box = (await hero.boundingBox())!;
+    // The drawing (1200 x 1500) covers the hero. The parts start at 0.40 of its height.
+    const scale = Math.max(box.width / 1200, box.height / 1500);
+    const partsTop = box.y + (box.height - 1500 * scale) / 2 + 0.4 * 1500 * scale;
+    for (let i = 0; i < 4; i++) {
+      await heroDots(page).nth(i).tap();
+      const text = (await hero.locator("p").first().locator("..").boundingBox())!;
+      expect(text.y + text.height, `at ${width}px, slide ${i}`).toBeLessThanOrEqual(partsTop);
+      expect(text.x).toBeGreaterThanOrEqual(box.x);
+      expect(text.x + text.width).toBeLessThanOrEqual(box.x + box.width);
+    }
+  }
+});
 
+test.describe("hero layout", () => {
   // From a small phone to the widest phone layout.
-  for (const width of [320, 375, 393, 430, 767]) {
-    test(`at ${width}px, the dots and their tap areas do not cover the poster or the CTAs`, async ({ page }) => {
+  for (const width of [320, 393, 767]) {
+    test(`at ${width}px, the hero has no logo, and the dot tap areas are in the hero`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/");
       const hero = page.locator("section").first();
-      const poster = (await hero.locator("img[alt='Relic Works']").boundingBox())!;
-      const ctas = await Promise.all((await hero.locator("a").all()).map(async (a) => (await a.boundingBox())!));
+      await expect(hero.locator("img[alt='Relic Works']")).toHaveCount(0);
+      const box = (await hero.boundingBox())!;
       for (const dot of await heroDots(page).all()) {
         const d = (await dot.boundingBox())!;
         // The ::after of each dot gives a 44px tap area around the 10px dot.
-        const tap = { x: d.x - 17, y: d.y - 17, width: d.width + 34, height: d.height + 34 };
-        expect(overlaps(d, poster), "dot over the poster").toBe(false);
-        expect(overlaps(tap, poster), "dot tap area over the poster").toBe(false);
-        for (const cta of ctas) expect(overlaps(tap, cta), "dot tap area over a CTA").toBe(false);
+        expect(d.x + d.width + 17).toBeLessThanOrEqual(box.x + box.width);
+        expect(d.y + d.height + 17).toBeLessThanOrEqual(box.y + box.height);
       }
     });
   }
@@ -177,6 +191,13 @@ test.describe("shop filters", () => {
   });
 });
 
+test("a tap on the hero opens the page of the current slide", async ({ page }) => {
+  await page.goto("/");
+  const box = (await page.locator("section").first().boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width * 0.7, box.y + 150);
+  await expect(page).toHaveURL(/\/shop#Stems$/);
+});
+
 test.describe("filled buttons and footer links on touch", () => {
   const WHITE = "rgb(255, 255, 255)";
 
@@ -185,24 +206,6 @@ test.describe("filled buttons and footer links on touch", () => {
   // finger is down, and a "sticky" :hover after the tap.
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-  });
-
-  test("the hero CTA keeps white text on a black background when pressed", async ({ page }) => {
-    await forcePseudoState(page, "section a", ["hover", "active"]);
-    const cta = page.locator("section a").first();
-    await expect(cta).toHaveCSS("color", WHITE);
-    await expect(cta).toHaveCSS("background-color", "rgb(0, 0, 0)");
-    await expect(cta).toHaveCSS("opacity", "1");
-  });
-
-  test("the hero CTA keeps white text with the hover state after a tap", async ({ page }) => {
-    await forcePseudoState(page, "section a", ["hover"]);
-    await expect(page.locator("section a").first()).toHaveCSS("color", WHITE);
-  });
-
-  test("the outline CTA keeps black text when pressed", async ({ page }) => {
-    await forcePseudoState(page, "section a + a", ["hover", "active"]);
-    await expect(page.locator("section a + a").first()).toHaveCSS("color", "rgb(0, 0, 0)");
   });
 
   test("a footer link keeps its colour after a tap", async ({ page }) => {

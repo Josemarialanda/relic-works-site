@@ -1,36 +1,40 @@
 /* pan-y: a vertical drag scrolls the page, a horizontal drag is a swipe. */
-/* The logo is two thirds as wide as the hero, so it ends at the second column line of the rows below. --logo-h is its height (the logo is 6.71 times as wide as it is high).
-   The dots and the CTAs sit above it. A dot has a 44px tap area, so the dots have their own row between the logo and the CTAs. */
-.hero { --logo-left: var(--spacing-20); --logo-w: calc(66.667cqw - var(--logo-left)); --logo-h: calc(var(--logo-w) / 6.71); container-type: inline-size; position: relative; height: 600px; overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; }
+/* --hero-h is the height of the hero. The wide drawing (1.79 times as wide as it is high) covers the hero, so it is
+   as wide as the hero or 1.79 times the hero height, whichever is more. --col is the free column between the parts
+   (24% of the drawing width), so the text never covers the parts. */
+.hero { --hero-h: 600px; --col: calc(0.24 * max(100cqw, var(--hero-h) * 1.79)); container-type: inline-size; position: relative; height: var(--hero-h); overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; background: var(--color-bone); }
 .slide { position: absolute; inset: 0; transition: opacity 200ms linear; }
-.kicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-4); }
-.kickerMeta { font-weight: var(--font-weight-regular); }
-.dots { position: absolute; right: var(--spacing-20); bottom: calc(var(--logo-h) + 44px); z-index: 2; }
-/* Two equal columns: both buttons are as wide as the wider one. */
-.ctas { position: absolute; left: var(--spacing-20); bottom: calc(var(--logo-h) + var(--spacing-24) + 52px); display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-12); z-index: 2; }
-.ctaLabels { display: grid; }
-.ctaLabels > * { grid-area: 1 / 1; }
-.ctaHidden { visibility: hidden; }
-.logo { position: absolute; left: var(--logo-left); bottom: var(--spacing-24); display: block; width: var(--logo-w); height: var(--logo-h); }
+.image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* The link covers the hero. The text is under it, the dots are above it. */
+.link { position: absolute; inset: 0; z-index: 1; }
+.link:focus-visible { outline: 2px solid var(--color-ink-black); outline-offset: -4px; }
+.dots { position: absolute; right: var(--spacing-20); bottom: var(--spacing-24); z-index: 2; }
+
+/* The text is in the middle of the hero, in the free column. The title is blackletter, white with a black outline
+   and a hard shadow, as a sign painted on the drawing. */
+.text { position: absolute; left: 50%; top: 50%; width: var(--col); transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: var(--spacing-12); text-align: center; }
+.title { margin: 0; font-family: var(--font-blackletter), serif; font-weight: 800; font-size: calc(var(--col) / 3.4); line-height: 1; color: var(--color-paper-white); -webkit-text-stroke: 0.07em var(--color-ink-black); paint-order: stroke fill; text-shadow: 0.05em 0.06em 0 var(--color-ink-black); }
+.description { margin: 0; font-family: var(--font-fell), serif; font-size: max(15px, calc(var(--col) / 15)); line-height: 1.2; color: var(--color-ink-black); }
+.meta { margin: 0; }
 
 /* Tablet */
 @media (max-width: 1023px) {
-  .hero { height: 540px; }
+  .hero { --hero-h: 540px; }
 }
 
 /* Phone */
 @media (max-width: 767px) {
-  /* The parts are at the right of each image, so show the right side on a narrow screen. */
-  .slide img { object-position: 90% 50%; }
-  .hero { --logo-left: var(--spacing-12); height: 480px; }
+  .hero { --hero-h: 480px; }
 }
 
-/* Narrow phone: the two buttons do not fit side by side, so they stack. */
-@media (max-width: 559px) {
-  .ctas { grid-template-columns: 1fr; }
+/* Narrow phone: the tall drawing has the parts in the lower part, so the text is at the top, the full width. */
+@media (max-width: 599px) {
+  .text { top: var(--spacing-24); width: calc(100% - 2 * var(--spacing-20)); transform: translateX(-50%); gap: var(--spacing-4); }
+  .title { font-size: 56px; }
+  .description { font-size: 17px; }
 }
 
 /* Widescreen */
 @media (min-width: 1600px) {
-  .hero { height: 680px; }
+  .hero { --hero-h: 680px; }
 }
