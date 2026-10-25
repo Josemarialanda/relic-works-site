@@ -9,6 +9,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import styles from "./GlassBubble.module.css";
+import { useStillness } from "@/lib/useStillness";
 
 /* ── inlined from lab/spring ──────────────────────── */
 /* ── one spring, for everything that settles ───────────────
@@ -36,22 +37,6 @@ import styles from "./GlassBubble.module.css";
    CLAUDE.md is not complimentary about the one permanent
    requestAnimationFrame already on this bench and there is no
    case for five more. */
-
-/* Here: the preference is read the way React wants it. The original read it while rendering, which gives a
-   different result on the server (no window) and in the browser, and React then warns about the mismatch. This is
-   false on the server and in the first render, and the real value after that. */
-const QUERY = "(prefers-reduced-motion: reduce)";
-function useStillness() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const media = window.matchMedia(QUERY);
-      media.addEventListener("change", onChange);
-      return () => media.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(QUERY).matches,
-    () => false,
-  );
-}
 
 /* Here: COW was Bencho's own pictures, which is not licensed to travel. The picture is now the `src` prop, so the
    page chooses it. With no `src`, the glass shows over an empty card. */

@@ -108,7 +108,7 @@ test.describe("tap targets", () => {
     await expectTapTargets(page.locator("footer a"));
   });
 
-  test("bespoke chips, swatches and tabs", async ({ page }) => {
+  test("bespoke chips and tabs", async ({ page }) => {
     await page.goto("/bespoke");
     await expectTapTargets(page.locator("main button, button[aria-pressed]"));
   });

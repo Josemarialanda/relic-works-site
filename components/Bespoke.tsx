@@ -1,17 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { addToBag, bespokeBagItem } from "@/lib/bag";
-import { ANGLES, BASE_PRICE, BONDS, COLORS, CUSTOM_RANGE, DEFAULTS, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
-import { parseBespoke, type BespokeConfig } from "@/lib/bespoke";
+import { ANGLES, BASE_PRICE, BONDS, CUSTOM_RANGE, DEFAULTS, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
+import { parseBespoke, sizeOf, type BespokeConfig } from "@/lib/bespoke";
 import { cx } from "@/lib/cx";
 import { gbp } from "@/lib/money";
+import { minClampHeightMm } from "@/lib/stem-geometry";
+import { FIRST_STEM, stemParams, type StemParams } from "@/lib/stem-model";
 import layout from "@/styles/layout.module.css";
 import styles from "./Bespoke.module.css";
 import { Photo } from "./Photo";
 import { StemCalculator } from "./StemCalculator";
 import button from "./ui/button.module.css";
+
+// The 3D part (three.js) loads only on the browser, after the page shows.
+const StemModel = dynamic(() => import("./StemModel").then((m) => m.StemModel), { ssr: false });
 
 const PARTS: { id: PartId; label: string; image: string; headline: string; body: string }[] = [
   { id: "stems", label: "Stems", image: "/images/bespoke/stems.jpg", headline: "Your length. Your angle. Your finish.", body: "Choose quill or threadless, set the reach, rise and clamp, choose a finish. We machine it to order." },
@@ -25,10 +31,14 @@ function isPart(id: string): id is PartId {
 
 type ChipsProps = { label: React.ReactNode; options: string[]; value: string; onPick: (v: string) => void; isLocked?: (v: string) => boolean };
 
+// A row of chips is a group named by its label, so a chip such as "60 mm" is clear (a height or a length).
 function Chips({ label, options, value, onPick, isLocked }: ChipsProps) {
+  const id = useId();
   return (
-    <div className={cx(layout.stack, layout.gap12)}>
-      <span className="meta-b">{label}</span>
+    <div className={cx(layout.stack, layout.gap12)} role="group" aria-labelledby={id}>
+      <span className="meta-b" id={id}>
+        {label}
+      </span>
       <div className={styles.chips}>
         {options.map((o) => {
           const locked = isLocked?.(o) ?? false;
@@ -43,11 +53,22 @@ function Chips({ label, options, value, onPick, isLocked }: ChipsProps) {
   );
 }
 
-function CustomInput({ placeholder, unit, value, onChange }: { placeholder: string; unit: string; value: string; onChange: (v: string) => void }) {
+// A slider for a custom size, between the limits in data/bespoke.json. The value shows beside the label.
+// The limits are not written: the slider ends show them.
+function SizeSlider({ label, unit, value, min, max, step = 1, onChange }: { label: string; unit: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void }) {
+  const id = useId();
+  const show = (v: number) => (unit === "°" ? `${v}°` : `${v} ${unit}`);
   return (
-    <div className={styles.custom}>
-      <input className={styles.customInput} type="number" min={0} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-      <span className="meta">{unit}</span>
+    <div className={styles.slider}>
+      <div className={styles.sliderHead}>
+        <label className="meta" htmlFor={id}>
+          {label}
+        </label>
+        <output className="meta-b" htmlFor={id}>
+          {show(value)}
+        </output>
+      </div>
+      <input id={id} className={styles.range} type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
     </div>
   );
 }
@@ -61,11 +82,21 @@ export function Bespoke() {
   const [length, setLength] = useState(DEFAULTS.length);
   const [angle, setAngle] = useState(DEFAULTS.angle);
   const [finish, setFinish] = useState(DEFAULTS.finish);
-  const [color, setColor] = useState(DEFAULTS.color);
-  const [custom, setCustom] = useState({ height: "", length: "", angle: "" });
+  // The custom sizes, which the customer sets with sliders. A slider starts at the chip that was picked
+  // before it.
+  const [sizes, setSizes] = useState({ length: sizeOf(DEFAULTS.length), angle: sizeOf(DEFAULTS.angle) });
+  const [customHeights, setCustomHeights] = useState<Record<PartId, number>>({
+    stems: sizeOf(HEIGHTS.stems.initial),
+    spacers: sizeOf(HEIGHTS.spacers.initial),
+    caps: sizeOf(HEIGHTS.caps.initial),
+  });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   // The key of the part that was added last, so the message goes when the options change.
   const [addedKey, setAddedKey] = useState<string | null>(null);
+  // The look of the 3D stem. A custom size that is empty or wrong keeps the last good value. The photo shows
+  // when the browser has no WebGL.
+  const [stem, setStem] = useState<StemParams>(FIRST_STEM);
+  const [noWebgl, setNoWebgl] = useState(false);
 
   // The URL hash (#stems, #spacers or #caps) selects the part.
   useEffect(() => {
@@ -90,29 +121,48 @@ export function Bespoke() {
   // A flat cap has no integrated spacer, so it has no height to choose.
   const hasHeight = !(part === "caps" && types.caps === "Flat cap");
 
-  // The order that the options make. A custom size is a number that the customer types, so it can be
-  // wrong: parseBespoke then gives null and the button stays off.
-  const customValue = (v: string, unit: string) => (v.trim() === "" ? "" : `${Number(v)}${unit}`);
+  // The order that the options make.
+  const stemAngle = angle === "Custom" ? `${sizes.angle}°` : angle;
+  // A threadless steerer clamp must be tall enough for the angle. The lower heights are locked, the page moves a
+  // locked height up to the lowest height that fits, and the height slider starts at that height.
+  const angleNum = sizeOf(stemAngle);
+  const minHeight = isStem && types.stems === "Threadless" && Number.isFinite(angleNum) ? minClampHeightMm(angleNum) : null;
+  const heightMin = Math.max(CUSTOM_RANGE.height.stems[0], minHeight ?? 0);
+  // The lowest custom height of each part. A stem needs at least the height for its angle.
+  const heightFloor = isStem ? heightMin : CUSTOM_RANGE.height[part][0];
+  const customHeight = Math.max(customHeights[part], heightFloor);
+  const partHeight = heights[part] === "Custom" ? `${customHeight} mm` : heights[part];
   const draft: BespokeConfig = {
     part,
     type: types[part],
     material,
     finish,
-    ...(finish === "Painted" && { color }),
-    ...(hasHeight && { height: heights[part] === "Custom" ? customValue(custom.height, " mm") : heights[part] }),
+    ...(hasHeight && { height: partHeight }),
     ...(isStem && {
       bond: bondLocked ? "Welded" : bond,
-      length: length === "Custom" ? customValue(custom.length, " mm") : length,
-      angle: angle === "Custom" ? customValue(custom.angle, "°") : angle,
+      length: length === "Custom" ? `${sizes.length} mm` : length,
+      angle: stemAngle,
     }),
   };
+  const draftKey = JSON.stringify(draft);
+  useEffect(() => {
+    setStem((before) => stemParams(JSON.parse(draftKey), before));
+  }, [draftKey]);
+  const heightLocked = (v: string) => minHeight !== null && v !== "Custom" && sizeOf(v) < minHeight;
+  useEffect(() => {
+    if (!heightLocked(heights.stems)) return;
+    const fit = HEIGHTS.stems.options.find((o) => !heightLocked(o));
+    if (fit) setHeights((h) => ({ ...h, stems: fit }));
+    // heightLocked reads minHeight, which follows the angle and the type.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minHeight, heights.stems]);
+  const tooShort = minHeight !== null && draft.height !== undefined && sizeOf(draft.height) < minHeight;
+
   const config = parseBespoke(draft);
   const item = config && bespokeBagItem(config);
   // The limits of the custom sizes that the customer chose, for the message when one is not valid.
   const limits = [
-    hasHeight && heights[part] === "Custom" && `height ${CUSTOM_RANGE.height[part].join("–")} mm`,
-    isStem && length === "Custom" && `length ${CUSTOM_RANGE.length.join("–")} mm`,
-    isStem && angle === "Custom" && `angle ${CUSTOM_RANGE.angle.join(" to ")}°`,
+    tooShort && `height of at least ${minHeight} mm for a ${draft.angle} angle`,
   ].filter(Boolean);
 
   return (
@@ -128,7 +178,21 @@ export function Bespoke() {
 
       <section id="configure" className={cx(layout.split75, layout.ruleB)}>
         <div className={cx(layout.ruleR, styles.photo)}>
-          <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 58vw" fill />
+          {!noWebgl ? (
+            <StemModel
+              params={stem}
+              label={
+                stem.part === "stems"
+                  ? `3D view of the stem: ${stem.type.toLowerCase()}, ${stem.lengthMm} mm long, ${stem.heightMm} mm steerer clamp, ${stem.riseDeg}° rise. Drag to turn it.`
+                  : stem.part === "spacers"
+                    ? `3D view of the spacer: ${stem.spacerSize} steerer, ${stem.partHeightMm} mm high. Drag to turn it.`
+                    : `3D view of the cap: ${stem.capType.toLowerCase()}${stem.capType === "Spacer cap" ? `, ${stem.partHeightMm} mm integrated spacer` : ""}. Drag to turn it.`
+              }
+              onFail={() => setNoWebgl(true)}
+            />
+          ) : (
+            <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 58vw" fill />
+          )}
         </div>
 
         <div className={cx(layout.stack, layout.gap36, styles.options)}>
@@ -160,49 +224,90 @@ export function Bespoke() {
           )}
 
           <div className={cx(layout.stack, layout.gap12)}>
-            <Chips label={`Finish — ${finish === "Painted" ? `Painted ${color}` : finish}`} options={FINISHES} value={finish} onPick={setFinish} />
-            {finish === "Painted" && (
-              <div className={styles.swatches}>
-                {COLORS.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    title={c.name}
-                    aria-label={c.name}
-                    aria-pressed={c.name === color}
-                    className={styles.swatch}
-                    // The swatch colour is data, so it stays inline.
-                    style={{ background: c.hex }}
-                    onClick={() => setColor(c.name)}
-                  />
-                ))}
-              </div>
-            )}
+            <Chips label={`Finish — ${finish}`} options={FINISHES} value={finish} onPick={setFinish} />
           </div>
 
           {hasHeight && (
             <div className={cx(layout.stack, layout.gap12)}>
-              <Chips label={height.label} options={height.options} value={heights[part]} onPick={(v) => setHeights((h) => ({ ...h, [part]: v }))} />
+              <Chips
+                label={
+                  <>
+                    {height.label}
+                    {part === "stems" && (HEIGHTS.stems.options.some(heightLocked) || tooShort) && (
+                      <span className={styles.lockNote}>
+                        {" "}
+                        — at least {minHeight} mm for a {draft.angle} angle
+                      </span>
+                    )}
+                  </>
+                }
+                options={height.options}
+                value={heights[part]}
+                onPick={(v) => {
+                  if (v === "Custom" && heights[part] !== "Custom") setCustomHeights((c) => ({ ...c, [part]: sizeOf(heights[part]) }));
+                  setHeights((h) => ({ ...h, [part]: v }));
+                }}
+                isLocked={part === "stems" ? heightLocked : undefined}
+              />
               {heights[part] === "Custom" && (
-                <CustomInput placeholder="e.g. 42" unit="mm" value={custom.height} onChange={(v) => setCustom((c) => ({ ...c, height: v }))} />
+                // Spacers and caps come in half millimetres, stems in whole millimetres.
+                <SizeSlider
+                  label="Custom height"
+                  unit="mm"
+                  value={customHeight}
+                  min={heightFloor}
+                  max={CUSTOM_RANGE.height[part][1]}
+                  step={isStem ? 1 : 0.5}
+                  onChange={(v) => setCustomHeights((c) => ({ ...c, [part]: v }))}
+                />
               )}
             </div>
           )}
 
           {isStem && (
             <div className={cx(layout.stack, layout.gap12)}>
-              <Chips label="Length" options={LENGTHS} value={length} onPick={setLength} />
+              <Chips
+                label="Length"
+                options={LENGTHS}
+                value={length}
+                onPick={(v) => {
+                  if (v === "Custom" && length !== "Custom") setSizes((z) => ({ ...z, length: sizeOf(length) }));
+                  setLength(v);
+                }}
+              />
               {length === "Custom" && (
-                <CustomInput placeholder="e.g. 95" unit="mm" value={custom.length} onChange={(v) => setCustom((c) => ({ ...c, length: v }))} />
+                <SizeSlider
+                  label="Custom length"
+                  unit="mm"
+                  value={sizes.length}
+                  min={CUSTOM_RANGE.length[0]}
+                  max={CUSTOM_RANGE.length[1]}
+                  onChange={(v) => setSizes((z) => ({ ...z, length: v }))}
+                />
               )}
             </div>
           )}
 
           {isStem && (
             <div className={cx(layout.stack, layout.gap12)}>
-              <Chips label="Angle" options={ANGLES} value={angle} onPick={setAngle} />
+              <Chips
+                label="Angle"
+                options={ANGLES}
+                value={angle}
+                onPick={(v) => {
+                  if (v === "Custom" && angle !== "Custom") setSizes((z) => ({ ...z, angle: sizeOf(angle) }));
+                  setAngle(v);
+                }}
+              />
               {angle === "Custom" && (
-                <CustomInput placeholder="e.g. 12" unit="°" value={custom.angle} onChange={(v) => setCustom((c) => ({ ...c, angle: v }))} />
+                <SizeSlider
+                  label="Custom angle"
+                  unit="°"
+                  value={sizes.angle}
+                  min={CUSTOM_RANGE.angle[0]}
+                  max={CUSTOM_RANGE.angle[1]}
+                  onChange={(v) => setSizes((z) => ({ ...z, angle: v }))}
+                />
               )}
             </div>
           )}
@@ -235,7 +340,7 @@ export function Bespoke() {
             </button>
             <span className="meta muted" role="status">
               {!item ? (
-                `Enter a custom size inside the limits: ${limits.join(", ")}.`
+                `Choose a size inside the limits: ${limits.join(", ")}.`
               ) : addedKey === item.key ? (
                 <>
                   Added to your bag. <Link className="link-u" href="/bag">View bag</Link>

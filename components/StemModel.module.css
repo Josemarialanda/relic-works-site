@@ -1,0 +1,3 @@
+/* The canvas fills the box. A horizontal drag turns the stem, and a vertical drag still scrolls the page. */
+.canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+.canvas:active { cursor: grabbing; }

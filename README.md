@@ -40,6 +40,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 - `data/`: the JSON files that you edit to change the shop: bespoke options and price rules, and delivery zones. The build checks them. See `data/README.md`.
 - `lib/catalog.ts`, `lib/catalog-stripe.ts`, `lib/catalog-server.ts`: the catalog. The products come from Stripe (see "Products" below).
 - `lib/bag.ts`: the shopping bag. It keeps its contents in `localStorage`.
+- `components/StemModel.tsx`: the 3D stem, spacer and cap on the bespoke page ([three.js](https://threejs.org), loaded in the browser after the page shows). `lib/stem-model.ts` turns the options into its numbers.
 - `lib/checkout.ts`, `lib/bespoke.ts`, `lib/shipping.ts`: the order check, the bespoke check and price, and the delivery price. The browser and the server both use them. See Checkout below.
 - `app/api/checkout/route.ts`: starts a Stripe payment. `app/checkout/success/` is the page after payment.
 - `public/`: images, icons and fonts, in one folder for each kind and page. See `public/README.md`.

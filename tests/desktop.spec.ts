@@ -10,6 +10,8 @@ import { buildOrder } from "../lib/checkout";
 import { parseStripeProducts } from "../lib/catalog-stripe";
 import { applySale } from "../lib/stock";
 import { slugify } from "../lib/catalog";
+import { FIRST_STEM, stemParams } from "../lib/stem-model";
+import { minClampHeightMm } from "../lib/stem-geometry";
 import Stripe from "stripe";
 import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
 
@@ -236,6 +238,189 @@ test.describe("stem calculator size", () => {
   }
 });
 
+test.describe("3D stem on the bespoke page", () => {
+  // No sway and no slide: a change shows at once.
+  test.use({ reducedMotion: "reduce" });
+
+  const model = (page: import("@playwright/test").Page) => page.locator("canvas[data-length]");
+  // The mean colour of the pixels that the stem covers. The canvas is clear around the stem.
+  const meanColor = (page: import("@playwright/test").Page) =>
+    model(page).evaluate((c: HTMLCanvasElement) => {
+      const t = document.createElement("canvas");
+      t.width = c.width;
+      t.height = c.height;
+      const x = t.getContext("2d")!;
+      x.drawImage(c, 0, 0);
+      const d = x.getImageData(0, 0, t.width, t.height).data;
+      let n = 0;
+      let rgb = [0, 0, 0];
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 40) continue;
+        n++;
+        rgb = rgb.map((v, k) => v + d[i + k]);
+      }
+      return { n, rgb: rgb.map((v) => v / Math.max(n, 1)) };
+    });
+
+  test("the stems tab shows a 3D stem that follows the options, and the other tabs show their photos", async ({ page }) => {
+    await page.goto("/bespoke");
+    await expect(model(page)).toHaveAttribute("data-type", "Threadless");
+    await expect(model(page)).toHaveAttribute("data-length", "90");
+    await expect(model(page)).toHaveAttribute("data-height", "45");
+    await expect(model(page)).toHaveAttribute("data-angle", "0");
+    await expect(model(page)).toHaveAttribute("data-finish", "Raw");
+    await expect(model(page)).toHaveAttribute("data-material", "Steel");
+
+    // The material changes the colour of the metal, not the shape.
+    await page.getByRole("button", { name: "Titanium", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-material", "Titanium");
+
+    await page.getByRole("group", { name: "Length" }).getByRole("button", { name: "60 mm" }).click();
+    await expect(model(page)).toHaveAttribute("data-length", "60");
+    await page.getByRole("group", { name: /^Height/ }).getByRole("button", { name: "60 mm" }).click();
+    await expect(model(page)).toHaveAttribute("data-height", "60");
+    await page.getByRole("button", { name: "-17°", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-angle", "-17");
+    await page.getByRole("button", { name: "Quill" }).click();
+    await expect(model(page)).toHaveAttribute("data-type", "Quill");
+    await page.getByRole("button", { name: "Welded" }).click();
+    await expect(model(page)).toHaveAttribute("data-bond", "Welded");
+    await page.getByRole("button", { name: "Polished" }).click();
+    await expect(model(page)).toHaveAttribute("data-finish", "Polished");
+
+    // The spacers and the caps have a 3D model too, which follows their options.
+    await page.getByRole("button", { name: "Spacers" }).click();
+    await expect(model(page)).toHaveAttribute("data-part", "spacers");
+    await page.getByRole("group", { name: "Steerer size" }).getByRole("button", { name: '1"', exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-spacer-size", '1"');
+    await page.getByRole("group", { name: "Height" }).getByRole("button", { name: "20 mm" }).click();
+    await expect(model(page)).toHaveAttribute("data-part-height", "20");
+    await page.getByRole("button", { name: "Caps", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-part", "caps");
+    await expect(model(page)).toHaveAttribute("data-cap-type", "Flat cap");
+    await page.getByRole("button", { name: "Spacer cap", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-cap-type", "Spacer cap");
+    await page.getByRole("group", { name: "Integrated spacer height" }).getByRole("button", { name: "10 mm" }).click();
+    await expect(model(page)).toHaveAttribute("data-part-height", "10");
+    // The stem keeps its own options.
+    await page.getByRole("button", { name: "Stems", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-part", "stems");
+    await expect(model(page)).toHaveAttribute("data-height", "60");
+  });
+
+  test("with no WebGL, each part shows its photo", async ({ page }) => {
+    await page.addInitScript(() => {
+      const get = HTMLCanvasElement.prototype.getContext;
+      // @ts-expect-error The test blocks WebGL, as in a browser that has none.
+      HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
+        return type.startsWith("webgl") ? null : get.call(this, type as "2d", ...(rest as []));
+      };
+    });
+    await page.goto("/bespoke");
+    for (const [tab, name] of [["Stems", "Bespoke stems"], ["Spacers", "Bespoke spacers"], ["Caps", "Bespoke caps"]]) {
+      await page.getByRole("button", { name: tab, exact: true }).click();
+      await expect(page.getByRole("img", { name })).toBeVisible();
+      await expect(model(page)).toHaveCount(0);
+    }
+  });
+
+  test("the custom size sliders move the model, and a steerer clamp over 70 mm has four bolts", async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "Custom" }).nth(1).click(); // Length (the order is height, length, angle)
+    const length = page.getByRole("slider", { name: /Custom length/ });
+    // The slider starts at the chip that was picked before it.
+    await expect(length).toHaveValue("90");
+    await length.fill("100");
+    await expect(model(page)).toHaveAttribute("data-length", "100");
+    await page.getByRole("button", { name: "Custom" }).nth(2).click();
+    await page.getByRole("slider", { name: /Custom angle/ }).fill("-20");
+    await expect(model(page)).toHaveAttribute("data-angle", "-20");
+    await page.getByRole("button", { name: "Custom" }).nth(0).click();
+    await page.getByRole("slider", { name: /Custom height/ }).fill("80");
+    await expect(model(page)).toHaveAttribute("data-height", "80");
+    await expect(model(page)).toHaveAttribute("data-bolts", "4");
+    await page.getByRole("slider", { name: /Custom height/ }).fill("70");
+    await expect(model(page)).toHaveAttribute("data-bolts", "2");
+  });
+
+  test("the material does not change the shape of the stem", async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "Raw", exact: true }).click();
+    const area = async () => {
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      return (await meanColor(page)).n;
+    };
+    const counts: number[] = [];
+    for (const material of ["Steel", "Titanium"]) {
+      await page.getByRole("button", { name: material, exact: true }).click();
+      await expect(model(page)).toHaveAttribute("data-material", material);
+      counts.push(await area());
+    }
+    // The covered pixels are the same for every material. The edges can differ by a few pixels.
+    for (const n of counts) expect(Math.abs(n - counts[0])).toBeLessThan(counts[0] * 0.005);
+  });
+
+  test("a brazed joint shows brass, and a welded joint does not", async ({ page }) => {
+    await page.goto("/bespoke");
+    await expect(model(page)).toHaveAttribute("data-bond", "Brazed");
+    await page.waitForTimeout(500);
+    // Steel is grey, brass is yellow: the red channel is higher than the blue channel by more.
+    const warmth = async () => {
+      const c = await meanColor(page);
+      return c.rgb[0] - c.rgb[2];
+    };
+    const brazed = await warmth();
+    await page.getByRole("button", { name: "Welded", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-bond", "Welded");
+    await expect.poll(async () => (await warmth()) < brazed - 0.1).toBe(true);
+  });
+
+  test("the finish changes the pixels of the model", async ({ page }) => {
+    await page.goto("/bespoke");
+    await expect(model(page)).toHaveAttribute("data-finish", "Raw");
+    await page.waitForTimeout(500);
+    const raw = await meanColor(page);
+    expect(raw.n).toBeGreaterThan(1000);
+    await page.getByRole("button", { name: "Polished", exact: true }).click();
+    await expect(model(page)).toHaveAttribute("data-finish", "Polished");
+    await expect.poll(async () => JSON.stringify((await meanColor(page)).rgb.map(Math.round)) !== JSON.stringify(raw.rgb.map(Math.round))).toBe(true);
+  });
+
+  test("the model stays inside its box for both types, the materials, and the shortest and the longest stem", async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "35°", exact: true }).click();
+    for (const [type, material, name] of [["Threadless", "Titanium", "60 mm"], ["Threadless", "Steel", "90 mm"], ["Quill", "Steel", "60 mm"], ["Quill", "Titanium", "90 mm"]]) {
+      await page.getByRole("button", { name: type, exact: true }).click();
+      await page.getByRole("button", { name: material, exact: true }).click();
+      await page.getByRole("group", { name: "Length" }).getByRole("button", { name, exact: true }).click();
+      await expect(model(page)).toHaveAttribute("data-length", name.replace(" mm", ""));
+      // The model draws on the next frame.
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      const box = await model(page).evaluate((c: HTMLCanvasElement) => {
+        const t = document.createElement("canvas");
+        t.width = c.width;
+        t.height = c.height;
+        const x = t.getContext("2d")!;
+        x.drawImage(c, 0, 0);
+        const d = x.getImageData(0, 0, t.width, t.height).data;
+        let x0 = t.width, y0 = t.height, x1 = -1, y1 = -1;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 40) continue;
+          const px = (i / 4) % t.width;
+          const py = Math.floor(i / 4 / t.width);
+          x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+        }
+        return { x0, y0, x1, y1, w: t.width, h: t.height };
+      });
+      expect(box.x1).toBeGreaterThan(box.x0);
+      expect(box.x0).toBeGreaterThan(0);
+      expect(box.y0).toBeGreaterThan(0);
+      expect(box.x1).toBeLessThan(box.w - 1);
+      expect(box.y1).toBeLessThan(box.h - 1);
+    }
+  });
+});
+
 test("the stem calculator keeps its height when the result needs more lines", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1200 });
   await page.goto("/bespoke");
@@ -268,7 +453,8 @@ test("the stem calculator keeps its height when the result needs more lines", as
 });
 
 test.describe("images", () => {
-  for (const path of ["/", "/shop", "/bespoke", "/bag", "/workshop"]) {
+  // The bespoke page shows 3D models; its photos show only with no WebGL (see the test of the 3D stem).
+  for (const path of ["/", "/shop", "/bag", "/workshop"]) {
     test(`all images on ${path} load`, async ({ page }) => {
       // The bag is empty on a first visit, so the bag page needs items to show their images.
       if (path === "/bag") await saveBag(page, DEMO_BAG);
@@ -591,18 +777,18 @@ async function saveBag(page: import("@playwright/test").Page, items: object[]) {
 
 // The bag tests use a bespoke part, because its price comes from data/bespoke.json. The shop products come from
 // Stripe and can change at any time, so no test depends on a product name or a price. The bag is empty on a first visit.
-const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "40 mm", length: "90 mm", angle: "±17°" };
+const BESPOKE_STEM = { part: "stems", type: "Threadless", material: "Titanium", bond: "Welded", finish: "Polished", height: "45 mm", length: "90 mm", angle: "17°" };
 const BESPOKE_ITEM = { key: "Bespoke stems|Titanium", type: "Bespoke stem", name: "Bespoke Stem", spec: "Titanium", price: 354, qty: 1, image: "/images/bespoke/stems.jpg", bespoke: BESPOKE_STEM };
 const DEMO_BAG = [{ ...BESPOKE_ITEM, qty: 2 }];
 
 test.describe("checkout order check (server rules)", () => {
-  const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Painted", color: "Green", height: "40 mm", length: "90 mm", angle: "±6°" };
+  const STEM = { part: "stems", type: "Threadless", material: "Steel", bond: "Brazed", finish: "Raw", height: "45 mm", length: "90 mm", angle: "0°" };
 
   test("it prices catalogue items from the catalog and ignores a price from the browser", () => {
     const r = order({ zone: "uk", items: [{ name: "Flat Cap", qty: 2, price: 1, unitAmount: 1 }] });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.order.lines).toEqual([{ name: "Flat Cap", description: "Aluminium · Painted", unitAmount: 3200, quantity: 2, priceId: "price_4" }]);
+    expect(r.order.lines).toEqual([{ name: "Flat Cap", description: "Titanium · Brushed", unitAmount: 3200, quantity: 2, priceId: "price_4" }]);
     expect(r.order.subtotal).toBe(64);
   });
 
@@ -610,17 +796,50 @@ test.describe("checkout order check (server rules)", () => {
     const r = order({ zone: "uk", items: [{ bespoke: { ...STEM, price: 1 }, qty: 1, price: 1 }] });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    // 220 × 1 (steel) × (1 + 0.10 brazed + 0.10 painted)
-    expect(r.order.lines[0].unitAmount).toBe(26400);
+    // 220 × 1 (steel) × (1 + 0.10 brazed + 0 raw)
+    expect(r.order.lines[0].unitAmount).toBe(24200);
     expect(r.order.lines[0].bespoke).toEqual(STEM);
   });
 
   test("a custom size costs more, and a custom size out of range is not valid", () => {
+    // 220 × (1 + 0.10 brazed + 0.10 custom size)
     const custom = order({ zone: "uk", items: [{ bespoke: { ...STEM, length: "95 mm" }, qty: 1 }] });
-    expect(custom.ok && custom.order.lines[0].unitAmount).toBe(Math.round(220 * 1.3) * 100);
-    for (const length of ["39 mm", "151 mm", "abc", "95mm"]) {
+    expect(custom.ok && custom.order.lines[0].unitAmount).toBe(Math.round(220 * 1.2) * 100);
+    for (const length of ["59 mm", "131 mm", "abc", "95mm"]) {
       expect(order({ zone: "uk", items: [{ bespoke: { ...STEM, length }, qty: 1 }] }).ok, length).toBe(false);
     }
+    for (const height of ["34 mm", "101 mm"]) {
+      expect(order({ zone: "uk", items: [{ bespoke: { ...STEM, height }, qty: 1 }] }).ok, height).toBe(false);
+    }
+    for (const angle of ["-36°", "36°"]) {
+      expect(order({ zone: "uk", items: [{ bespoke: { ...STEM, angle }, qty: 1 }] }).ok, angle).toBe(false);
+    }
+    // Spacers: 2.5–100 mm. Caps (the integrated spacer): 2.5–10 mm.
+    const part = (p: string, type: string, height: string) =>
+      order({ zone: "uk", items: [{ bespoke: { part: p, type, material: "Steel", finish: "Raw", height }, qty: 1 }] }).ok;
+    expect(part("spacers", '1 1/8"', "2.5 mm")).toBe(true);
+    expect(part("spacers", '1 1/8"', "100 mm")).toBe(true);
+    expect(part("spacers", '1 1/8"', "2 mm")).toBe(false);
+    expect(part("spacers", '1 1/8"', "100.5 mm")).toBe(false);
+    expect(part("caps", "Spacer cap", "7.5 mm")).toBe(true);
+    expect(part("caps", "Spacer cap", "10.5 mm")).toBe(false);
+    expect(part("caps", "Spacer cap", "15 mm")).toBe(false);
+  });
+
+  test("a threadless steerer clamp must be tall enough for the angle, and a quill has no such limit", () => {
+    // The lowest heights: 35 mm up to 10° up or down, 41 mm at 35°. See lib/stem-geometry.ts.
+    expect(minClampHeightMm(6)).toBe(35);
+    expect(minClampHeightMm(-6)).toBe(35);
+    expect(minClampHeightMm(35)).toBe(41);
+    for (let a = 0; a < 35; a++) expect(minClampHeightMm(a + 1)).toBeGreaterThanOrEqual(minClampHeightMm(a));
+    const ok = (bespoke: object) => order({ zone: "uk", items: [{ bespoke: { ...STEM, ...bespoke }, qty: 1 }] }).ok;
+    expect(ok({ height: "35 mm", angle: "0°" })).toBe(true);
+    expect(ok({ height: "35 mm", angle: "35°" })).toBe(false);
+    expect(ok({ height: "40 mm", angle: "35°" })).toBe(false);
+    expect(ok({ height: "45 mm", angle: "35°" })).toBe(true);
+    expect(ok({ height: "41 mm", angle: "-35°" })).toBe(true);
+    expect(ok({ height: "40 mm", angle: "-35°" })).toBe(false);
+    expect(ok({ type: "Quill", height: "35 mm", angle: "35°" })).toBe(true);
   });
 
   test("it rejects what is not valid", () => {
@@ -637,11 +856,11 @@ test.describe("checkout order check (server rules)", () => {
       { zone: "uk", items: [{ name: "Flat Cap", qty: "2" }] },
       { zone: "uk", items: [{ bespoke: { ...STEM, material: "Gold" }, qty: 1 }] },
       // Brazing is steel only.
-      { zone: "uk", items: [{ bespoke: { ...STEM, material: "Aluminium" }, qty: 1 }] },
+      { zone: "uk", items: [{ bespoke: { ...STEM, material: "Titanium" }, qty: 1 }] },
       // A flat cap has no height.
       { zone: "uk", items: [{ bespoke: { part: "caps", type: "Flat cap", material: "Steel", finish: "Raw", height: "5 mm" }, qty: 1 }] },
-      // Painted needs a colour.
-      { zone: "uk", items: [{ bespoke: { ...STEM, color: undefined }, qty: 1 }] },
+      // The page has no painted finish.
+      { zone: "uk", items: [{ bespoke: { ...STEM, finish: "Painted", color: "Green" }, qty: 1 }] },
       { zone: "uk", items: Array.from({ length: 51 }, () => ({ name: "Flat Cap", qty: 1 })) },
     ];
     for (const payload of bad) expect(order(payload).ok, JSON.stringify(payload)).toBe(false);
@@ -791,8 +1010,8 @@ test.describe("bespoke order", () => {
   test("the price follows the options, and the button adds the part to the bag", async ({ page }) => {
     await page.goto("/bespoke");
     const price = page.getByText("Your price").locator("..").locator(".subheading");
-    // Steel, brazed, painted: 220 × 1.2
-    await expect(price).toHaveText("£264");
+    // Steel, brazed, raw: 220 × 1.1
+    await expect(price).toHaveText("£242");
     await page.getByRole("button", { name: "Polished", exact: true }).click();
     await expect(price).toHaveText("£275");
     await page.getByRole("button", { name: "Titanium", exact: true }).click();
@@ -803,32 +1022,70 @@ test.describe("bespoke order", () => {
     await expect(page.getByRole("status")).toContainText("Added to your bag");
     await page.getByRole("link", { name: "View bag" }).click();
     await expect(page.locator("main")).toContainText("Bespoke Stem");
-    await expect(page.locator("main")).toContainText("Threadless · Titanium · Welded · Polished · 40 mm height · 90 mm · ±6°");
+    await expect(page.locator("main")).toContainText("Threadless · Titanium · Welded · Polished · 45 mm height · 90 mm · 0°");
     await expect(page.locator("main")).toContainText("£354");
   });
 
-  test("a custom size that is out of range turns the button off and says what the limits are", async ({ page }) => {
+  test("the custom size sliders have the limits", async ({ page }) => {
     await page.goto("/bespoke");
+    // A threadless stem can need more than 35 mm for its angle, so the quill shows the lowest height of the range.
+    await page.getByRole("button", { name: "Quill", exact: true }).click();
+    for (const [n, name, min, max] of [[0, /Custom height/, "35", "100"], [1, /Custom length/, "60", "130"], [2, /Custom angle/, "-35", "35"]] as const) {
+      await page.getByRole("button", { name: "Custom" }).nth(n).click();
+      const slider = page.getByRole("slider", { name });
+      await expect(slider).toHaveAttribute("min", min);
+      await expect(slider).toHaveAttribute("max", max);
+      await expect(page.getByRole("button", { name: "Add to bag" })).toBeEnabled();
+    }
+    // Spacers and caps have a slider for a custom height too, in half millimetres.
     const add = page.getByRole("button", { name: "Add to bag" });
-    await page.getByRole("button", { name: "Custom" }).nth(1).click(); // the length chips
-    await expect(add).toBeDisabled();
-    await expect(page.getByRole("status")).toContainText("length 40–150 mm");
-    await page.getByPlaceholder("e.g. 95").fill("200");
-    await expect(add).toBeDisabled();
-    await page.getByPlaceholder("e.g. 95").fill("95");
+    await page.getByRole("button", { name: "Spacers", exact: true }).click();
+    await page.getByRole("button", { name: "Custom" }).click();
+    const spacer = page.getByRole("slider", { name: /Custom height/ });
+    await expect(spacer).toHaveAttribute("min", "2.5");
+    await expect(spacer).toHaveAttribute("max", "100");
+    await expect(spacer).toHaveAttribute("step", "0.5");
+    await spacer.fill("12.5");
+    await expect(page.getByRole("slider", { name: /Custom height/ }).locator("..")).toContainText("12.5 mm");
     await expect(add).toBeEnabled();
+    await page.getByRole("button", { name: "Caps", exact: true }).click();
+    await page.getByRole("button", { name: "Spacer cap", exact: true }).click();
+    await expect(page.getByRole("group", { name: "Integrated spacer height" }).getByRole("button")).toHaveText(["5 mm", "10 mm", "Custom"]);
+    await page.getByRole("button", { name: "Custom" }).click();
+    const cap = page.getByRole("slider", { name: /Custom height/ });
+    await expect(cap).toHaveAttribute("min", "2.5");
+    await expect(cap).toHaveAttribute("max", "10");
+    await expect(add).toBeEnabled();
+  });
+
+  test("a steep angle locks the steerer clamp heights that are too short, and moves the height up", async ({ page }) => {
+    await page.goto("/bespoke");
+    await page.getByRole("button", { name: "35 mm", exact: true }).click();
+    await page.getByRole("button", { name: "35°", exact: true }).click();
+    await expect(page.getByRole("button", { name: "35 mm", exact: true })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "45 mm", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("at least 41 mm for a 35° angle")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add to bag" })).toBeEnabled();
+    // The custom height slider starts at the lowest height that fits the angle.
+    await page.getByRole("button", { name: "Custom" }).nth(0).click();
+    await expect(page.getByRole("slider", { name: /Custom height/ })).toHaveAttribute("min", "41");
+    await expect(page.getByRole("slider", { name: /Custom height/ })).toHaveValue("45");
+    // A quill stem has no such limit.
+    await page.getByRole("button", { name: "Quill", exact: true }).click();
+    await expect(page.getByRole("button", { name: "35 mm", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Add to bag" })).toBeEnabled();
   });
 
   test("a flat cap and a spacer cap are priced from their own options", async ({ page }) => {
     await page.goto("/bespoke");
     await page.getByRole("button", { name: "Caps", exact: true }).click();
     const price = page.getByText("Your price").locator("..").locator(".subheading");
-    // Steel, painted: 40 × 1.1
-    await expect(price).toHaveText("£44");
+    // Steel, raw: 40 × 1
+    await expect(price).toHaveText("£40");
     await page.getByRole("button", { name: "Add to bag" }).click();
     await page.goto("/bag");
     await expect(page.locator("main")).toContainText("Bespoke Cap");
-    await expect(page.locator("main")).toContainText("Flat cap · Steel · Painted Green");
+    await expect(page.locator("main")).toContainText("Flat cap · Steel · Raw");
   });
 });
 
@@ -878,7 +1135,7 @@ test.describe("data files", () => {
 
   test("the catalog has the categories, materials, finishes and order of the Stripe products", () => {
     expect(CATALOG.categories).toEqual(["Stems", "Spacers", "Caps"]);
-    expect(CATALOG.materials).toEqual(["Steel", "Aluminium", "Titanium"]);
+    expect(CATALOG.materials).toEqual(["Steel", "Titanium"]);
     expect(CATALOG.products.map((p) => p.name)).toEqual(productsJson.products.map((p) => p.name));
     expect(CATALOG.products[4]).toMatchObject({ id: "prod_4", priceId: "price_4", name: "Flat Cap", price: 32 });
   });
@@ -1005,12 +1262,34 @@ test.describe("data files", () => {
       return () => parseBespokeData(d);
     };
     expect(bad((d) => Object.assign(d.parts.caps.type, { options: ["Spacer cap"], initial: "Spacer cap" }))).toThrow(/parts\.caps\.type\.options: must include "Flat cap"/);
-    expect(bad((d) => Object.assign(d, { materials: ["Titanium", "Aluminium"], defaults: { ...d.defaults, material: "Titanium" } }))).toThrow(/materials: must include "Steel"/);
-    expect(bad((d) => (d.defaults.color = "Pink"))).toThrow(/defaults\.color: "Pink" is not one of/);
+    expect(bad((d) => Object.assign(d, { materials: ["Titanium"], defaults: { ...d.defaults, material: "Titanium" } }))).toThrow(/materials: must include "Steel"/);
     expect(bad((d) => (d.parts.stems.type.initial = "Nope"))).toThrow(/parts\.stems\.type\.initial/);
-    expect(bad((d) => (d.colors[0].hex = "blue"))).toThrow(/colors\[0\]\.hex: "blue" must be a colour such as #1f7a3d/);
     expect(bad((d) => delete (d.pricing.materialFactor as Record<string, number>).Titanium)).toThrow(/pricing\.materialFactor\.Titanium: must be a number above 0/);
     expect(bad((d) => (d.customRange.length = [150, 40]))).toThrow(/customRange\.length: must be two numbers, the lowest first/);
     expect(bad((d) => (d.parts.stems.basePrice = 0))).toThrow(/parts\.stems\.basePrice/);
   });
+});
+
+test("the 3D stem takes its numbers from the options", () => {
+  const base = { part: "stems" as const, type: "Threadless", material: "Steel", finish: "Raw", bond: "Welded", height: "45 mm", length: "80 mm", angle: "17°" };
+  const raw = stemParams(base, FIRST_STEM);
+  expect(raw).toMatchObject({ type: "Threadless", lengthMm: 80, heightMm: 45, riseDeg: 17, bond: "Welded", finish: "Raw" });
+  // Bare metal shows the colour of the material.
+  expect(stemParams({ ...base, material: "Titanium" }, FIRST_STEM).color).not.toBe(raw.color);
+  expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).roughness).toBeLessThan(raw.roughness);
+  expect(stemParams({ ...base, finish: "Brushed" }, FIRST_STEM).brushed).toBe(true);
+  // The material gives the colour of the bare metal, and nothing else.
+  const metal = (material: string) => stemParams({ ...base, material }, FIRST_STEM);
+  expect(metal("Steel")).toMatchObject({ material: "Steel" });
+  expect(metal("Titanium").color).not.toBe(metal("Steel").color);
+  expect({ ...metal("Titanium"), color: "", material: "" }).toEqual({ ...metal("Steel"), color: "", material: "" });
+  // A custom size can be negative (an angle), and an empty or wrong one keeps the value before.
+  expect(stemParams({ ...base, angle: "-12°" }, FIRST_STEM).riseDeg).toBe(-12);
+  expect(stemParams({ ...base, length: "" }, raw).lengthMm).toBe(80);
+  expect(stemParams({ ...base, length: undefined, type: "Nonsense" }, raw)).toMatchObject({ lengthMm: 80, type: "Threadless" });
+  // A spacer and a cap have their own height and type. The stem keeps its height.
+  const spacer = stemParams({ part: "spacers", type: '1"', material: "Steel", finish: "Raw", height: "12.5 mm" }, raw);
+  expect(spacer).toMatchObject({ part: "spacers", spacerSize: '1"', partHeightMm: 12.5, heightMm: 45 });
+  const cap = stemParams({ part: "caps", type: "Flat cap", material: "Steel", finish: "Raw" }, spacer);
+  expect(cap).toMatchObject({ part: "caps", capType: "Flat cap", partHeightMm: 12.5, spacerSize: '1"' });
 });

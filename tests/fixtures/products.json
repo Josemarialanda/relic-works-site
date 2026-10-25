@@ -6,13 +6,11 @@
   ],
   "materials": [
     "Steel",
-    "Titanium",
-    "Aluminium"
+    "Titanium"
   ],
   "finishes": [
     "Raw",
     "Brushed",
-    "Painted",
     "Polished"
   ],
   "products": [
@@ -27,28 +25,28 @@
       "name": "Threadless Stem",
       "category": "Stems",
       "material": "Steel",
-      "finish": "Painted",
+      "finish": "Brushed",
       "price": 185
     },
     {
       "name": "1\" Spacer",
       "category": "Spacers",
-      "material": "Aluminium",
+      "material": "Titanium",
       "finish": "Brushed",
       "price": 24
     },
     {
       "name": "1 1/8\" Spacer",
       "category": "Spacers",
-      "material": "Aluminium",
+      "material": "Titanium",
       "finish": "Polished",
       "price": 28
     },
     {
       "name": "Flat Cap",
       "category": "Caps",
-      "material": "Aluminium",
-      "finish": "Painted",
+      "material": "Titanium",
+      "finish": "Brushed",
       "price": 32
     },
     {

@@ -16,7 +16,6 @@ const STEPS = [
 ];
 
 const MATERIALS = [
-  { name: "CNC aluminium", note: "Light, stiff, anodizes well" },
   { name: "Titanium", note: "Corrosion-proof, ages beautifully" },
   { name: "Steel", note: "Brazed, tough, repairable" },
 ];
@@ -24,7 +23,6 @@ const MATERIALS = [
 const FINISHES = [
   { name: "Raw", note: "Bare metal, waxed" },
   { name: "Brushed", note: "Satin grain, low sheen" },
-  { name: "Painted", note: "Any colour" },
   { name: "Polished", note: "Mirror finish" },
 ];
 

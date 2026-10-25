@@ -22,10 +22,9 @@ export type BespokeData = {
   finishes: string[];
   lengths: string[];
   angles: string[];
-  colors: { name: string; hex: string }[];
   lengthRange: [number, number];
   angleRange: [number, number];
-  defaults: { material: string; bond: string; finish: string; color: string; length: string; angle: string };
+  defaults: { material: string; bond: string; finish: string; length: string; angle: string };
   materialFactor: Record<string, number>;
   bondExtra: Record<string, number>;
   finishExtra: Record<string, number>;
@@ -72,23 +71,13 @@ export function parseBespokeData(data: unknown): BespokeData {
   need(materials, "Steel", "materials", "only steel can be brazed");
   need(bonds, "Welded", "bonds", "all the other materials are welded");
   need(bonds, "Brazed", "bonds", "the page offers brazing for steel");
-  need(finishes, "Painted", "finishes", "a painted finish has a colour");
 
-  const colors = array(root.colors, FILE, "colors").map((c, i) => {
-    const o = object(c, FILE, `colors[${i}]`);
-    const hex = string(o.hex, FILE, `colors[${i}].hex`);
-    if (!/^#[0-9a-f]{6}$/i.test(hex)) fail(FILE, `colors[${i}].hex`, `"${hex}" must be a colour such as #1f7a3d`);
-    return { name: string(o.name, FILE, `colors[${i}].name`), hex };
-  });
-  if (colors.length === 0) fail(FILE, "colors", "must have at least one colour");
-  strings(colors.map((c) => c.name), FILE, "colors (the names)");
 
   const d = object(root.defaults, FILE, "defaults");
   const defaults = {
     material: oneOf(d.material, materials, FILE, "defaults.material"),
     bond: oneOf(d.bond, bonds, FILE, "defaults.bond"),
     finish: oneOf(d.finish, finishes, FILE, "defaults.finish"),
-    color: oneOf(d.color, colors.map((c) => c.name), FILE, "defaults.color"),
     length: oneOf(d.length, lengths, FILE, "defaults.length"),
     angle: oneOf(d.angle, angles, FILE, "defaults.angle"),
   };
@@ -103,7 +92,6 @@ export function parseBespokeData(data: unknown): BespokeData {
     finishes,
     lengths,
     angles,
-    colors,
     lengthRange: range(custom.length, FILE, "customRange.length"),
     angleRange: range(custom.angle, FILE, "customRange.angle"),
     defaults,
@@ -125,7 +113,6 @@ export const BONDS = data.bonds;
 export const FINISHES = data.finishes;
 export const LENGTHS = data.lengths;
 export const ANGLES = data.angles;
-export const COLORS = data.colors;
 export const DEFAULTS = data.defaults;
 
 // The limits of a custom value, in mm (the angle is in degrees).

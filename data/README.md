@@ -30,7 +30,7 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 |---|---|
 | `category` | A category, for example `Stems`. The filters list the categories, materials and finishes that the products use. |
 | `material` | For example `Steel`. |
-| `finish` | For example `Painted`. |
+| `finish` | For example `Brushed`. |
 | `order` | Optional number. It sets the order of the "Featured" sort (lowest first). |
 | `stock` | Optional whole number: the items in stock. With no `stock`, the product has no limit. See "Stock" below. |
 
@@ -67,12 +67,30 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 
 - `parts`: for stems, spacers and caps: the `name`, the `basePrice`, the `type` options, and the `height` options
   with the `customRange` (the lowest and highest custom height, in mm). `initial` must be one of the `options`.
-- `materials`, `bonds`, `finishes`, `lengths`, `angles`, `colors`: the choices on the bespoke page. `Custom` in a
+- `materials`, `bonds`, `finishes`, `lengths`, `angles`: the choices on the bespoke page. `Custom` in a
   list shows the box where the customer types a size.
 - `defaults`: the choices that the page starts with. Each must be in its list.
 - `customRange`: the lowest and highest custom length (mm) and angle (degrees).
+- **Custom stem sizes.** On the page, `Custom` for the height, the length and the angle of a stem shows a slider
+  between the limits of its `customRange` (now 35–100 mm, 60–130 mm and -35° to 35°). `Custom` for the height of a spacer
+  (2.5–100 mm) or of the integrated spacer of a cap (2.5–10 mm) shows a slider in half millimetres.
+- **Steerer clamp height and angle.** A threadless stem needs a steerer clamp that is tall enough to hold the body tube
+  at its angle: 35 mm up to 10° up or down (the rule gives 34 mm at 0°, but the lowest height is 35 mm), 36 mm at 17°, 41 mm at 35°. The page locks the heights
+  that are too short, the height slider starts at the lowest height that fits, and the checkout refuses a height that
+  is too short. The rule and its sizes are in `lib/stem-geometry.ts`. A quill stem has no such limit.
+- **Four bolts.** The 3D stem shows four steerer clamp bolts on a clamp taller than 70 mm, and two on the others.
 - `pricing`: the price is `basePrice × materialFactor × (1 + extras)`, rounded to whole pounds. The extras are
   fractions: `0.1` is 10%. Each material, bond and finish needs a number. **These numbers are placeholders.**
 - **Do not rename these values.** The code uses them: the material `Steel` (only steel can be brazed), the bonds
-  `Brazed` and `Welded`, the finish `Painted` (it has a colour), and the cap type `Flat cap` (it has no height).
+  `Brazed` and `Welded`, and the cap type `Flat cap` (it has no height).
   The build stops with a message if one is missing.
+
+### The 3D models
+
+The Stems tab shows a 3D stem (`components/StemModel.tsx`) that follows the options: type, material, bond, finish,
+steerer clamp height, length and angle. A custom size that is empty or wrong keeps the last good value. The colour of
+each material (it does not change the shape) and the surface of each finish are in `lib/stem-model.ts`. A new value in
+`materials` or `finishes` needs a line in `lib/stem-model.ts`, or the 3D stem keeps its last look.
+
+The Spacers and Caps tabs show a 3D spacer (its steerer size and height) and a 3D cap (a flat cap, or a spacer cap
+with its integrated spacer height), in the same metal and finish. The browser needs WebGL: with no WebGL, each tab shows its photo.

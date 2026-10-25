@@ -4,39 +4,32 @@
       "name": "Stem",
       "basePrice": 220,
       "type": { "label": "Type", "options": ["Quill", "Threadless"], "initial": "Threadless" },
-      "height": { "label": "Height", "options": ["35 mm", "40 mm", "45 mm", "50 mm", "Custom"], "initial": "40 mm", "customRange": [20, 100] }
+      "height": { "label": "Height", "options": ["35 mm", "45 mm", "60 mm", "Custom"], "initial": "45 mm", "customRange": [35, 100] }
     },
     "spacers": {
       "name": "Spacer",
       "basePrice": 30,
       "type": { "label": "Steerer size", "options": ["1\"", "1 1/8\""], "initial": "1 1/8\"" },
-      "height": { "label": "Height", "options": ["2.5 mm", "5 mm", "10 mm", "15 mm", "20 mm", "Custom"], "initial": "10 mm", "customRange": [1, 50] }
+      "height": { "label": "Height", "options": ["2.5 mm", "5 mm", "10 mm", "15 mm", "20 mm", "Custom"], "initial": "10 mm", "customRange": [2.5, 100] }
     },
     "caps": {
       "name": "Cap",
       "basePrice": 40,
       "type": { "label": "Type", "options": ["Flat cap", "Spacer cap"], "initial": "Flat cap" },
-      "height": { "label": "Integrated spacer height", "options": ["5 mm", "10 mm", "15 mm", "Custom"], "initial": "5 mm", "customRange": [1, 50] }
+      "height": { "label": "Integrated spacer height", "options": ["5 mm", "10 mm", "Custom"], "initial": "5 mm", "customRange": [2.5, 10] }
     }
   },
-  "materials": ["Steel", "Titanium", "Aluminium"],
+  "materials": ["Steel", "Titanium"],
   "bonds": ["Brazed", "Welded"],
-  "finishes": ["Raw", "Brushed", "Painted", "Polished"],
-  "lengths": ["60 mm", "75 mm", "90 mm", "110 mm", "130 mm", "Custom"],
-  "angles": ["±6°", "±17°", "±25°", "±35°", "Custom"],
-  "defaults": { "material": "Steel", "bond": "Brazed", "finish": "Painted", "color": "Green", "length": "90 mm", "angle": "±6°" },
-  "colors": [
-    { "name": "Blue", "hex": "#2f5fa8" },
-    { "name": "Red", "hex": "#b3262d" },
-    { "name": "Orange", "hex": "#d9661f" },
-    { "name": "Gold", "hex": "#c9a24a" },
-    { "name": "Green", "hex": "#1f7a3d" }
-  ],
-  "customRange": { "length": [40, 150], "angle": [-40, 40] },
+  "finishes": ["Raw", "Brushed", "Polished"],
+  "lengths": ["60 mm", "70 mm", "80 mm", "90 mm", "Custom"],
+  "angles": ["-35°", "-17°", "0°", "17°", "35°", "Custom"],
+  "defaults": { "material": "Steel", "bond": "Brazed", "finish": "Raw", "length": "90 mm", "angle": "0°" },
+  "customRange": { "length": [60, 130], "angle": [-35, 35] },
   "pricing": {
-    "materialFactor": { "Steel": 1, "Titanium": 1.4, "Aluminium": 0.85 },
+    "materialFactor": { "Steel": 1, "Titanium": 1.4 },
     "bondExtra": { "Brazed": 0.1, "Welded": 0 },
-    "finishExtra": { "Raw": 0, "Brushed": 0.05, "Painted": 0.1, "Polished": 0.15 },
+    "finishExtra": { "Raw": 0, "Brushed": 0.05, "Polished": 0.15 },
     "customExtra": 0.1
   }
 }

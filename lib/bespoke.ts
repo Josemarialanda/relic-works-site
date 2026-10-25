@@ -7,7 +7,6 @@ import {
   BASE_PRICE,
   BONDS,
   BOND_EXTRA,
-  COLORS,
   CUSTOM_EXTRA,
   CUSTOM_RANGE,
   FINISHES,
@@ -20,6 +19,7 @@ import {
   TYPES,
   type PartId,
 } from "../data/bespoke";
+import { minClampHeightMm } from "./stem-geometry";
 
 export type BespokeConfig = {
   part: PartId;
@@ -28,8 +28,6 @@ export type BespokeConfig = {
   // Stems only. Brazing is steel only, so other materials are always welded.
   bond?: string;
   finish: string;
-  // Painted only.
-  color?: string;
   // Not for a flat cap. A chip value ("40 mm") or a custom value in the same format.
   height?: string;
   // Stems only.
@@ -52,6 +50,11 @@ function isDegrees(v: string, [min, max]: [number, number]): boolean {
   return m !== null && Number(m[1]) >= min && Number(m[1]) <= max;
 }
 
+// The number in a size such as "42 mm", "17°" or "-12°".
+export function sizeOf(v: string): number {
+  return Number(/-?\d+(?:\.\d+)?/.exec(v)?.[0] ?? NaN);
+}
+
 // Check unknown data. It gives a clean config (it drops all other fields), or null if anything is wrong.
 export function parseBespoke(v: unknown): BespokeConfig | null {
   if (typeof v !== "object" || v === null) return null;
@@ -70,12 +73,6 @@ export function parseBespoke(v: unknown): BespokeConfig | null {
 
   const config: BespokeConfig = { part: p, type, material, finish };
 
-  if (finish === "Painted") {
-    const color = str("color");
-    if (!color || !COLORS.some((c) => c.name === color)) return null;
-    config.color = color;
-  }
-
   // A flat cap has no integrated spacer. Everything else has a height.
   const hasHeight = !(p === "caps" && type === "Flat cap");
   const height = str("height");
@@ -93,6 +90,8 @@ export function parseBespoke(v: unknown): BespokeConfig | null {
     if (!length || !(isChip(LENGTHS, length) || isMm(length, CUSTOM_RANGE.length))) return null;
     const angle = str("angle");
     if (!angle || !(isChip(ANGLES, angle) || isDegrees(angle, CUSTOM_RANGE.angle))) return null;
+    // A threadless steerer clamp must be tall enough to hold the body at this angle. See lib/stem-geometry.ts.
+    if (type === "Threadless" && sizeOf(height!) < minClampHeightMm(sizeOf(angle))) return null;
     Object.assign(config, { bond, length, angle });
   } else if (str("bond") !== undefined || str("length") !== undefined || str("angle") !== undefined) {
     return null;
@@ -117,7 +116,7 @@ export function bespokeSpec(c: BespokeConfig): string {
     c.type,
     c.material,
     c.bond,
-    c.finish === "Painted" ? `Painted ${c.color}` : c.finish,
+    c.finish,
     c.height && `${c.height} height`,
     c.length,
     c.angle,
