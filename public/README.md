@@ -6,9 +6,8 @@ Put an image that only one component imports next to that component instead, and
 | Folder | Content |
 |---|---|
 | `images/brand/` | Logo, social share image, and other brand images. |
-| `images/home/` | Photos for the home page (hero slides, categories). |
-| `images/bespoke/` | Photos for the bespoke configurator (stems, spacers, caps). |
-| `images/workshop/` | Photos for the workshop page (hero, process steps, collage). |
+| `images/home/` | Cartoon drawings for the home page (hero slides, categories). |
+| `images/bespoke/` | Cartoon drawings for the bespoke configurator, shown when the browser has no WebGL. |
 | `icons/` | SVG icons and the favicon set. |
 | `fonts/` | Self-hosted font files. The site uses `next/font/google` today. |
 

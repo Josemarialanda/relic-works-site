@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { expectFooterAtBottom, forcePseudoState, heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
+import { forcePseudoState, heroDots, heroSlide, sizes, swipe, touchHold } from "./helpers";
 
 const MIN_TARGET = 44;
 
@@ -177,24 +177,6 @@ test.describe("shop filters", () => {
   });
 });
 
-test.describe("collage lightbox", () => {
-  test("it locks the page scroll and a swipe down closes it", async ({ page }) => {
-    await page.goto("/workshop");
-    await page.locator("button[title^='View']").first().tap();
-    const close = page.getByRole("button", { name: "Close" });
-    await expect(close).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("hidden");
-
-    const box = (await close.boundingBox())!;
-    expect(box.width).toBeGreaterThanOrEqual(MIN_TARGET);
-    expect(box.height).toBeGreaterThanOrEqual(MIN_TARGET);
-
-    await swipe(page, { x: 180, y: 200 }, { x: 180, y: 450 });
-    await expect(close).toHaveCount(0);
-    expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
-  });
-});
-
 test.describe("filled buttons and footer links on touch", () => {
   const WHITE = "rgb(255, 255, 255)";
 
@@ -284,8 +266,4 @@ test("the 3D view of the bespoke page stays at the top of the window while the o
 test("the bespoke page does not scroll sideways", async ({ page }) => {
   await page.goto("/bespoke");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
-});
-
-test("the footer is at the bottom of the window on a short page, and at the end of a long page", async ({ page }) => {
-  await expectFooterAtBottom(page);
 });

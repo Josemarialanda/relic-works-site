@@ -35,7 +35,7 @@ VS Code tasks for these commands are in `.vscode/tasks.json`.
 
 ## Project layout
 
-- `app/`: the pages (home, shop, bespoke, bag, workshop, support).
+- `app/`: the pages (home, shop, bespoke, bag, support).
 - `components/`: the React components, each with a CSS module.
 - `data/`: the JSON files that you edit to change the shop: bespoke options and price rules, and delivery zones. The build checks them. See `data/README.md`.
 - `lib/catalog.ts`, `lib/catalog-stripe.ts`, `lib/catalog-server.ts`: the catalog. The products come from Stripe (see "Products" below).

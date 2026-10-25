@@ -20,6 +20,8 @@
 
 /* Phone */
 @media (max-width: 767px) {
+  /* The parts are at the right of each image, so show the right side on a narrow screen. */
+  .slide img { object-position: 90% 50%; }
   .hero { --logo-left: var(--spacing-12); height: 480px; }
 }
 

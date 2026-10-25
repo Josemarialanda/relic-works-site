@@ -11,7 +11,6 @@ const LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop" },
   { label: "Bespoke", href: "/bespoke" },
-  { label: "Workshop", href: "/workshop" },
   { label: "Support", href: "/support" },
 ];
 

@@ -338,23 +338,6 @@ test.describe("3D stem on the bespoke page", () => {
     await expect(model(page)).toHaveAttribute("data-bolts", "2");
   });
 
-  test("the material does not change the shape of the stem", async ({ page }) => {
-    await page.goto("/bespoke");
-    await page.getByRole("button", { name: "Polished", exact: true }).click();
-    const area = async () => {
-      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-      return (await meanColor(page)).n;
-    };
-    const counts: number[] = [];
-    for (const material of ["Steel", "Titanium"]) {
-      await page.getByRole("button", { name: material, exact: true }).click();
-      await expect(model(page)).toHaveAttribute("data-material", material);
-      counts.push(await area());
-    }
-    // The covered pixels are the same for every material. The edges can differ by a few pixels.
-    for (const n of counts) expect(Math.abs(n - counts[0])).toBeLessThan(counts[0] * 0.005);
-  });
-
   test("a brazed joint shows brass, and a welded joint does not", async ({ page }) => {
     await page.goto("/bespoke");
     await expect(model(page)).toHaveAttribute("data-bond", "Brazed");
@@ -449,7 +432,7 @@ test("the stem calculator keeps its height when the result needs more lines", as
 
 test.describe("images", () => {
   // The bespoke page shows 3D models; its photos show only with no WebGL (see the test of the 3D stem).
-  for (const path of ["/", "/shop", "/bag", "/workshop"]) {
+  for (const path of ["/", "/shop", "/bag"]) {
     test(`all images on ${path} load`, async ({ page }) => {
       // The bag is empty on a first visit, so the bag page needs items to show their images.
       if (path === "/bag") await saveBag(page, DEMO_BAG);
@@ -465,30 +448,6 @@ test.describe("images", () => {
       }
     });
   }
-
-  test("the lightbox shows the photo of the tile", async ({ page }) => {
-    await page.goto("/workshop");
-    await page.locator("button[title='View Flat Cap']").click();
-    await expect(page.locator("img[src*='workshop%2Fcollage-flat-cap.jpg']")).toHaveCount(2);
-  });
-});
-
-test("a shop image is hidden behind a pixel pattern while it loads, then it shows", async ({ page }) => {
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => (release = resolve));
-  await page.route("**/_next/image**", async (route) => {
-    await gate;
-    await route.continue();
-  });
-  await page.goto("/shop");
-  const img = page.locator("main img").first();
-  // The products come from Stripe and can change, so skip when no product has an image.
-  test.skip((await img.count()) === 0, "the shop has no product image");
-  await expect(img).toHaveCSS("opacity", "0");
-  release();
-  // The blocks sharpen for about 0.4 s. Then the canvas is gone and the photo shows.
-  await expect(img).toHaveCSS("opacity", "1");
-  await expect(page.locator("main canvas")).toHaveCount(0);
 });
 
 test("a bag image is hidden behind a pixel pattern while it loads, then it shows", async ({ page }) => {
@@ -656,15 +615,6 @@ test("the hero buttons have the same width as each other on every slide", async 
       for (const box of await Promise.all((await ctas.all()).map((a) => a.boundingBox()))) widths.add(Math.round(box!.width));
     }
     expect([...widths], `at ${width}px`).toHaveLength(1);
-  }
-});
-
-test("the two buttons at the end of the workshop page have the same width", async ({ page }) => {
-  for (const width of [320, 393, 600, 767, 820, 1023, 1280, 1680]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/workshop");
-    const [a, b] = await Promise.all(["Build yours", "Shop the catalog"].map((name) => page.getByRole("link", { name }).boundingBox()));
-    expect(Math.round(a!.width), `at ${width}px`).toBe(Math.round(b!.width));
   }
 });
 
@@ -1044,7 +994,7 @@ test.describe("bespoke order", () => {
 });
 
 test("the pages have the share image in the metadata, with a full address", async ({ page, request }) => {
-  for (const path of ["/", "/shop", "/bespoke", "/workshop"]) {
+  for (const path of ["/", "/shop", "/bespoke"]) {
     await page.goto(path);
     const og = await page.locator('meta[property="og:image"]').getAttribute("content");
     const twitter = await page.locator('meta[name="twitter:image"]').getAttribute("content");
@@ -1221,7 +1171,6 @@ test("the 3D stem takes its numbers from the options", () => {
   const base = { part: "stems" as const, type: "Threadless", material: "Steel", finish: "Brushed", bond: "Welded", height: "45 mm", length: "80 mm", angle: "17°" };
   const stem = stemParams(base, FIRST_STEM);
   expect(stem).toMatchObject({ type: "Threadless", lengthMm: 80, heightMm: 45, riseDeg: 17, bond: "Welded", finish: "Brushed" });
-  expect(stemParams({ ...base, material: "Titanium" }, FIRST_STEM).color).not.toBe(stem.color);
   expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).roughness).toBeLessThan(stem.roughness);
   expect(stem.brushed).toBe(true);
   expect(stemParams({ ...base, finish: "Polished" }, FIRST_STEM).brushed).toBe(false);

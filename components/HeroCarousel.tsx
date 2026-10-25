@@ -13,9 +13,9 @@ import button from "./ui/button.module.css";
 import dots from "./ui/dots.module.css";
 
 const slidesFor = (products: Product[]) => [
-  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: `Quill and threadless · ${fromLabel(products, "Stems")}`, cta: "Shop stems", image: "/images/home/hero-stems.jpg", alt: "A quill stem and a threadless stem" },
-  { name: "Spacers", kicker: "Spacers", meta: `For 1" and 1 1/8" steerers · ${fromLabel(products, "Spacers")}`, cta: "Shop spacers", image: "/images/home/hero-spacers.jpg", alt: "A stack of machined spacers" },
-  { name: "Caps", kicker: "Caps", meta: `Flat caps and spacer caps · ${fromLabel(products, "Caps")}`, cta: "Shop caps", image: "/images/home/hero-caps.jpg", alt: "A flat cap and a spacer cap" },
+  { name: "Stems", kicker: "Stems — turned, milled and finished in the UK", meta: `Quill and threadless · ${fromLabel(products, "Stems")}`, cta: "Shop stems", image: "/images/home/hero-stems.jpg", alt: "A drawing of a quill stem and a threadless stem" },
+  { name: "Spacers", kicker: "Spacers", meta: `For 1" and 1 1/8" steerers · ${fromLabel(products, "Spacers")}`, cta: "Shop spacers", image: "/images/home/hero-spacers.jpg", alt: "A drawing of spacers in different sizes and finishes" },
+  { name: "Caps", kicker: "Caps", meta: `Flat caps and spacer caps · ${fromLabel(products, "Caps")}`, cta: "Shop caps", image: "/images/home/hero-caps.jpg", alt: "A drawing of a flat cap and a spacer cap" },
 ];
 
 const INTERVAL_MS = 5000;

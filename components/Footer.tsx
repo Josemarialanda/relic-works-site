@@ -22,9 +22,6 @@ export function Footer() {
         <a href="/bespoke#caps">Caps</a>
       </div>
       <div className={styles.column}>
-        <Link href="/workshop">Workshop</Link>
-      </div>
-      <div className={styles.column}>
         <Link href="/support">Support</Link>
         <a href="/support#shipping">Shipping &amp; returns</a>
         <a href="/support#guarantee">Guarantee</a>
