@@ -980,6 +980,30 @@ test.describe("bespoke order", () => {
     await expect(page.getByRole("button", { name: "Add to bag" })).toBeEnabled();
   });
 
+  test("the bag shows each bespoke part as its 3D view showed it when it was added", async ({ page }) => {
+    await page.goto("/bespoke");
+    const model = page.locator("canvas[data-part]");
+    const add = page.getByRole("button", { name: "Add to bag" });
+    await page.getByRole("button", { name: "Quill", exact: true }).click();
+    await expect(model).toHaveAttribute("data-type", "Quill");
+    await page.waitForTimeout(800);
+    await add.click();
+    await page.getByRole("button", { name: "Threadless", exact: true }).click();
+    await expect(model).toHaveAttribute("data-type", "Threadless");
+    await page.waitForTimeout(800);
+    await add.click();
+    await page.goto("/bag");
+    const srcs = await page.locator("main img").evaluateAll((imgs) => imgs.map((i) => i.getAttribute("src") ?? ""));
+    expect(srcs).toHaveLength(2);
+    for (const s of srcs) expect(s).toMatch(/^data:image\/jpeg;base64,/);
+    expect(srcs[0]).not.toBe(srcs[1]);
+  });
+
+  test("a saved bespoke image that is not a thumbnail or a local photo shows the photo of the part", async ({ page }) => {
+    await saveBag(page, [{ ...BESPOKE_ITEM, image: "https://example.com/x.jpg" }]);
+    await expect(page.locator("main img[src*='bespoke%2Fstems.jpg']")).toHaveCount(1);
+  });
+
   test("a flat cap and a spacer cap are priced from their own options", async ({ page }) => {
     await page.goto("/bespoke");
     await page.getByRole("button", { name: "Caps", exact: true }).click();

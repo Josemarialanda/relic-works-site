@@ -6,7 +6,7 @@
 // option slides to its new value. The unit of the scene is the centimetre. The steerer is on the vertical axis, the
 // body points along +x, and the handlebar is along z.
 
-import { useEffect, useRef, type PointerEvent } from "react";
+import { useEffect, useRef, type PointerEvent, type RefObject } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { JOINT_MARGIN_MM } from "@/lib/stem-geometry";
@@ -232,9 +232,11 @@ type Props = {
   label: string;
   // The browser has no WebGL: the page shows the photo instead.
   onFail: () => void;
+  // Gets the canvas, so the page can make the bag thumbnail from it.
+  canvasRef?: RefObject<HTMLCanvasElement | null>;
 };
 
-export function StemModel({ params, label, onFail }: Props) {
+export function StemModel({ params, label, onFail, canvasRef }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const still = useStillness();
   // The loop reads the newest values from these refs, so it starts only once.
@@ -802,7 +804,10 @@ export function StemModel({ params, label, onFail }: Props) {
 
   return (
     <canvas
-      ref={canvas}
+      ref={(el) => {
+        canvas.current = el;
+        if (canvasRef) canvasRef.current = el;
+      }}
       className={styles.canvas}
       role="img"
       aria-label={label}

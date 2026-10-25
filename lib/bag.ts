@@ -52,6 +52,13 @@ function isBagItem(v: unknown): v is BagItem {
   );
 }
 
+// The image of a bespoke part: a thumbnail of its 3D view, or a photo in public/images. Any other value (a bag saved
+// with a changed image) gives the photo of the part, so the page never loads an address that it does not know.
+function bespokeImage(image: unknown, config: BespokeConfig): string {
+  const ok = typeof image === "string" && image.length < 200_000 && (image.startsWith("data:image/jpeg;base64,") || /^\/images\/[\w/-]+\.jpg$/.test(image));
+  return ok ? image : `/images/bespoke/${config.part}.jpg`;
+}
+
 // The price and quantity that the shop uses now. A saved bag can hold an old price. It can also hold a product
 // that the shop no longer sells: this gives null for it.
 function current(item: BagItem, products: readonly Product[]): BagItem | null {
@@ -61,7 +68,7 @@ function current(item: BagItem, products: readonly Product[]): BagItem | null {
   // A product that is sold out is dropped, like a product that is not for sale.
   if (product?.stock === 0) return null;
   const price = bespoke ? bespokePrice(bespoke) : product!.price;
-  return { ...item, price, qty: Math.min(item.qty, product ? maxQty(product) : MAX_QTY), ...(bespoke ? { bespoke } : {}) };
+  return { ...item, price, qty: Math.min(item.qty, product ? maxQty(product) : MAX_QTY), ...(bespoke ? { bespoke, image: bespokeImage(item.image, bespoke) } : {}) };
 }
 
 // useSyncExternalStore needs a stable snapshot, so parse only when the raw value changes.

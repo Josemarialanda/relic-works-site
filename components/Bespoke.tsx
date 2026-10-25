@@ -2,12 +2,13 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { addToBag, bespokeBagItem } from "@/lib/bag";
 import { ANGLES, BASE_PRICE, BONDS, CUSTOM_RANGE, DEFAULTS, FINISHES, HEIGHTS, LENGTHS, MATERIALS, PART_IDS, TYPES, type PartId } from "@/data/bespoke";
 import { parseBespoke, sizeOf, type BespokeConfig } from "@/lib/bespoke";
 import { cx } from "@/lib/cx";
 import { gbp } from "@/lib/money";
+import { modelThumbnail } from "@/lib/model-thumbnail";
 import { minClampHeightMm } from "@/lib/stem-geometry";
 import { FIRST_STEM, stemParams, type StemParams } from "@/lib/stem-model";
 import layout from "@/styles/layout.module.css";
@@ -96,6 +97,7 @@ export function Bespoke() {
   // The look of the 3D part (stem, spacer or cap). The photo shows when the browser has no WebGL.
   const [stem, setStem] = useState<StemParams>(FIRST_STEM);
   const [noWebgl, setNoWebgl] = useState(false);
+  const modelCanvas = useRef<HTMLCanvasElement>(null);
 
   // The URL hash (#stems, #spacers or #caps) selects the part.
   useEffect(() => {
@@ -188,6 +190,7 @@ export function Bespoke() {
                     : `3D view of the cap: ${stem.capType.toLowerCase()}${stem.capType === "Spacer cap" ? `, ${stem.partHeightMm} mm integrated spacer` : ""}. Drag to turn it.`
               }
               onFail={() => setNoWebgl(true)}
+              canvasRef={modelCanvas}
             />
           ) : (
             <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 50vw" fill />
@@ -331,7 +334,9 @@ export function Bespoke() {
               disabled={!item}
               onClick={() => {
                 if (!item) return;
-                addToBag(item);
+                // The bag shows the part as the 3D view shows it now. With no 3D view, it shows the photo.
+                const thumb = !noWebgl && modelCanvas.current ? modelThumbnail(modelCanvas.current) : null;
+                addToBag(thumb ? { ...item, image: thumb } : item);
                 setAddedKey(item.key);
               }}
             >
