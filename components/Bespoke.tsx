@@ -175,8 +175,8 @@ export function Bespoke() {
         ))}
       </div>
 
-      <section id="configure" className={cx(layout.split75, layout.ruleB)}>
-        <div className={cx(layout.ruleR, styles.photo)}>
+      <section id="configure" className={cx(layout.grid2, layout.ruleB)}>
+        <div className={styles.photo}>
           {!noWebgl ? (
             <StemModel
               params={stem}
@@ -190,7 +190,7 @@ export function Bespoke() {
               onFail={() => setNoWebgl(true)}
             />
           ) : (
-            <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 58vw" fill />
+            <Photo src={bp.image} alt={`Bespoke ${bp.label.toLowerCase()}`} sizes="(max-width: 767px) 100vw, 50vw" fill />
           )}
         </div>
 

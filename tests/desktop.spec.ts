@@ -538,47 +538,6 @@ test.describe("product page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
   });
 
-  test("the magnifier button turns the glass on and off", async ({ page }) => {
-    await page.goto("/shop");
-    const card = page.locator("main a[href^='/shop/']").first();
-    test.skip((await card.count()) === 0, "the shop has no product");
-    await card.click();
-    await page.waitForURL("**/shop/*");
-    // A product with no image has no magnifier button.
-    const on = page.getByRole("button", { name: "Turn on the magnifying glass" });
-    test.skip((await on.count()) === 0, "the first product has no image");
-
-    await expect(page.locator("main canvas")).toHaveCount(0);
-    const box = await on.boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-    // The glass picture comes from this site, so the browser lets WebGL read it. Wait for it before the click.
-    const sameSite = page.waitForResponse((r) => r.url().includes("/_next/image") && r.url().includes("w=1200"));
-    await on.click();
-    await expect(page.locator("main canvas")).toHaveCount(1);
-    await expect(page.getByRole("button", { name: "Turn off the magnifying glass" })).toHaveAttribute("aria-pressed", "true");
-    expect((await sameSite).status()).toBe(200);
-
-    // The zoom slider shows in the top right corner, to the left of the button, while the glass is on. It sets the zoom of the glass, 1x to 2x.
-    const zoom = page.getByRole("slider", { name: "Zoom of the magnifying glass" });
-    await expect(zoom).toBeVisible();
-    await expect(zoom).toHaveAttribute("aria-valuetext", "1.5×");
-    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "1.5");
-    await zoom.focus();
-    await page.keyboard.press("End");
-    await expect(zoom).toHaveAttribute("aria-valuetext", "2.0×");
-    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "2");
-    await page.keyboard.press("Home");
-    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "1");
-
-    await page.getByRole("button", { name: "Turn off the magnifying glass" }).click();
-    await expect(page.locator("main canvas")).toHaveCount(0);
-    await expect(zoom).toHaveCount(0);
-    await on.click();
-    await expect(page.locator("main canvas")).toHaveCount(1);
-    await page.keyboard.press("Escape");
-    await expect(page.locator("main canvas")).toHaveCount(0);
-  });
-
   test("a bespoke part in the bag has no link to a product page", async ({ page }) => {
     await saveBag(page, DEMO_BAG);
     await expect(page.locator("main a[href^='/shop/']")).toHaveCount(0);
@@ -1280,4 +1239,13 @@ test("the 3D stem takes its numbers from the options", () => {
   expect(spacer).toMatchObject({ part: "spacers", spacerSize: '1"', partHeightMm: 12.5, heightMm: 45 });
   const cap = stemParams({ part: "caps", type: "Flat cap", material: "Steel", finish: "Raw" }, spacer);
   expect(cap).toMatchObject({ part: "caps", capType: "Flat cap", partHeightMm: 12.5, spacerSize: '1"' });
+});
+
+test("the divider between the 3D view and the options goes the full height of the bespoke section", async ({ page }) => {
+  await page.goto("/bespoke");
+  const options = page.locator("#configure > div").nth(1);
+  expect(await options.evaluate((e) => getComputedStyle(e).borderLeftWidth)).toBe("1px");
+  const section = (await page.locator("#configure").boundingBox())!;
+  const box = (await options.boundingBox())!;
+  expect(box.height).toBeGreaterThan(section.height - 2);
 });

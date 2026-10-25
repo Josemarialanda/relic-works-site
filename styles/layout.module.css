@@ -13,7 +13,6 @@
 
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.split75 { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 .withSidebar { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
 .sticky { position: sticky; top: 0; }
 
@@ -29,7 +28,7 @@
 
 /* Phone: stack the multi-column grids and turn the vertical dividers into horizontal ones. */
 @media (max-width: 767px) {
-  .grid2, .grid3, .split75, .withSidebar { grid-template-columns: minmax(0, 1fr); }
-  .grid2 > .ruleR, .grid3 > .ruleR, .split75 > .ruleR, .withSidebar > .ruleR { border-right: none; border-bottom: var(--rule); }
+  .grid2, .grid3, .withSidebar { grid-template-columns: minmax(0, 1fr); }
+  .grid2 > .ruleR, .grid3 > .ruleR, .withSidebar > .ruleR { border-right: none; border-bottom: var(--rule); }
   .sticky { position: static; }
 }

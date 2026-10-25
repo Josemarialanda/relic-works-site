@@ -270,6 +270,17 @@ test.describe("stem calculator", () => {
   });
 });
 
+test("the 3D view of the bespoke page stays at the top of the window while the options scroll", async ({ page }) => {
+  await page.goto("/bespoke");
+  const view = page.locator("#configure > div").first();
+  await page.getByRole("button", { name: "Add to bag" }).scrollIntoViewIfNeeded();
+  const box = (await view.boundingBox())!;
+  expect(box.y).toBe(0);
+  expect(box.height).toBeGreaterThan(200);
+  // The options scroll under it, not over it.
+  expect(await view.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+});
+
 test("the bespoke page does not scroll sideways", async ({ page }) => {
   await page.goto("/bespoke");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
