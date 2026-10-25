@@ -1,10 +1,13 @@
-/* The picture is as wide as its column and square, but it is never taller than the window below the navigation
-   (60px), so the whole picture fits in the window. The photo is cropped at the sides when the box is wider than it
-   is tall. The box is positioned, so the photo can fill it. */
-.column { border-right: var(--rule); }
-.picture { position: relative; aspect-ratio: 1 / 1; max-height: calc(100vh - 60px); overflow: hidden; background: var(--color-bone); }
+/* Next to the details, the picture is as wide as its column and square, but never higher than the details column
+   (the grid row), so it ends with the details at the latest. When the row is lower than the column is wide, the photo
+   is cropped at the top and bottom. The height is set directly (the column height or the column width, whichever is
+   smaller): with aspect-ratio and max-height, Safari makes the box narrower too, and a white strip shows next to it.
+   On a phone the picture is square, on top of the details. The box is positioned, so the photo can fill it. */
+.column { position: relative; container-type: inline-size; border-right: var(--rule); }
+.picture { position: absolute; top: 0; left: 0; width: 100%; height: min(100%, 100cqw); overflow: hidden; background: var(--color-bone); }
 
-/* Phone: the picture is on top, as wide as the window, with a rule under it. */
+/* Phone: the picture is on top, square and as wide as the window, with a rule under it. */
 @media (max-width: 767px) {
-  .column { border-right: none; border-bottom: var(--rule); }
+  .column { container-type: normal; border-right: none; border-bottom: var(--rule); }
+  .picture { position: relative; height: auto; aspect-ratio: 1 / 1; }
 }

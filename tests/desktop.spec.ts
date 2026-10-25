@@ -497,6 +497,25 @@ test.describe("product page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
   });
 
+  test("the picture of a product ends with the details next to it", async ({ page }) => {
+    for (const width of [1280, 1710, 820]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto("/shop");
+      const href = await page.locator("main a[href^='/shop/']").first().getAttribute("href");
+      test.skip(href === null, "the shop has no product");
+      await page.goto(href!);
+      // The grid gives both columns the same height, so compare the picture with the last line of the details. Under
+      // it there is only the padding of the details column (40px at most).
+      const column = (await page.locator("main > div").first().boundingBox())!;
+      const picture = (await page.locator("main > div").first().locator("div").first().boundingBox())!;
+      const last = (await page.getByRole("link", { name: "View your bag" }).boundingBox())!;
+      expect(picture.y + picture.height, `at ${width}px`).toBeLessThanOrEqual(last.y + last.height + 41);
+      // The picture fills the width of its column (the column has a 1px rule at the right), with no strip next to it.
+      expect(picture.width, `at ${width}px`).toBeGreaterThanOrEqual(column.width - 2);
+      expect(picture.height, `at ${width}px`).toBeGreaterThan(200);
+    }
+  });
+
   test("a bespoke part in the bag has no link to a product page", async ({ page }) => {
     await saveBag(page, DEMO_BAG);
     await expect(page.locator("main a[href^='/shop/']")).toHaveCount(0);
