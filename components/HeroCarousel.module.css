@@ -1,7 +1,7 @@
 /* pan-y: a vertical drag scrolls the page, a horizontal drag is a swipe. */
 /* The logo is two thirds as wide as the hero, so it ends at the second column line of the rows below. --logo-h is its height (the logo is 6.71 times as wide as it is high).
    The dots and the CTAs sit above it. A dot has a 44px tap area, so the dots have their own row between the logo and the CTAs. */
-.hero { --logo-left: var(--spacing-20); --logo-w: calc(66.667cqw - var(--logo-left)); --logo-h: calc(var(--logo-w) / 6.71); container-type: inline-size; position: relative; height: 720px; overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; }
+.hero { --logo-left: var(--spacing-20); --logo-w: calc(66.667cqw - var(--logo-left)); --logo-h: calc(var(--logo-w) / 6.71); container-type: inline-size; position: relative; height: 600px; overflow: hidden; border-bottom: var(--rule); touch-action: pan-y; }
 .slide { position: absolute; inset: 0; transition: opacity 200ms linear; }
 .kicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-4); }
 .kickerMeta { font-weight: var(--font-weight-regular); }
@@ -15,12 +15,12 @@
 
 /* Tablet */
 @media (max-width: 1023px) {
-  .hero { height: 640px; }
+  .hero { height: 540px; }
 }
 
 /* Phone */
 @media (max-width: 767px) {
-  .hero { --logo-left: var(--spacing-12); height: 560px; }
+  .hero { --logo-left: var(--spacing-12); height: 480px; }
 }
 
 /* Narrow phone: the two buttons do not fit side by side, so they stack. */
@@ -30,5 +30,5 @@
 
 /* Widescreen */
 @media (min-width: 1600px) {
-  .hero { height: 800px; }
+  .hero { height: 680px; }
 }

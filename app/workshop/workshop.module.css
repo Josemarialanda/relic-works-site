@@ -1,12 +1,8 @@
-.hero { position: relative; height: 640px; overflow: hidden; border-bottom: var(--rule); }
+.hero { position: relative; height: 540px; overflow: hidden; border-bottom: var(--rule); }
 .heroKicker { position: absolute; left: var(--spacing-20); top: var(--spacing-24); }
 .heroPoster { position: absolute; left: 16px; bottom: var(--spacing-12); }
-/* "The Workshop." is wider than "Relic Works", so it scales down sooner. The doubled class beats the global .poster size. */
+/* "The Workshop" is wider than "Relic Works", so it scales down sooner. The doubled class beats the global .poster size. */
 .hero .heroPoster { font-size: min(138px, 11.5vw); }
-.storyLabel { padding: var(--spacing-40) var(--spacing-20); }
-.story { padding: var(--spacing-40); }
-.storyHeading { text-wrap: balance; }
-.storyBody { line-height: 1.5; max-width: 620px; }
 .noteList { padding: var(--spacing-40) var(--spacing-20); }
 .noteRow { padding: 16px 0; }
 .noteText { text-align: right; }
@@ -17,18 +13,18 @@
 
 /* Tablet */
 @media (max-width: 1023px) {
-  .hero { height: 520px; }
-  .story, .ctaBody { padding: var(--spacing-40) var(--spacing-20); }
+  .hero { height: 440px; }
+  .ctaBody { padding: var(--spacing-40) var(--spacing-20); }
 }
 
 /* Phone */
 @media (max-width: 767px) {
-  .hero { height: 420px; }
-  .story, .ctaBody { padding: var(--spacing-24) var(--spacing-20); }
+  .hero { height: 360px; }
+  .ctaBody { padding: var(--spacing-24) var(--spacing-20); }
 }
 
 /* Widescreen */
 @media (min-width: 1600px) {
-  .hero { height: 760px; }
+  .hero { height: 640px; }
   .hero .heroPoster { font-size: min(180px, 11.5vw); }
 }

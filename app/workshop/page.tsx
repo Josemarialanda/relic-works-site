@@ -59,20 +59,7 @@ export default function WorkshopPage() {
       <section className={styles.hero}>
         <Photo src="/images/workshop/hero.jpg" alt="Quill Stem held in the workshop" preload fill />
         <span className={cx("meta-b", styles.heroKicker)}>Turned, milled and finished in the UK</span>
-        <div className={cx("poster", styles.heroPoster)}>The Workshop.</div>
-      </section>
-
-      <section className={cx(layout.split57, layout.ruleB)}>
-        <div className={cx(layout.ruleR, styles.storyLabel)}>
-          <span className="meta-b">Our story</span>
-        </div>
-        <div className={cx(layout.stack, layout.gap20, styles.story)}>
-          <h2 className={cx("heading", styles.storyHeading)}>A passion for riding and a workshop to build cool parts.</h2>
-          <p className={cx("body-copy", styles.storyBody)}>
-            That&apos;s how Relic Works started. Everything is turned, milled and finished right here in the UK. No outsourcing, no
-            middlemen. Just tough, high-quality stems, caps and custom bits designed for funky builds and built to last forever.
-          </p>
-        </div>
+        <div className={cx("poster", styles.heroPoster)}>The Workshop</div>
       </section>
 
       <section className={cx(layout.grid3, layout.ruleB)}>

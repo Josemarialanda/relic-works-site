@@ -285,15 +285,6 @@ test.describe("images", () => {
     });
   }
 
-  test("the home and workshop pages use their own copy of the collage images", async ({ page }) => {
-    for (const [path, folder] of [["/", "/images/home/"], ["/workshop", "/images/workshop/"]]) {
-      await page.goto(path);
-      const srcs = await page.locator("button[title^='View'] img").evaluateAll((els) => els.map((e) => e.getAttribute("src")));
-      expect(srcs.length).toBe(6);
-      for (const src of srcs) expect(decodeURIComponent(src!)).toContain(`${folder}collage-`);
-    }
-  });
-
   test("the lightbox shows the photo of the tile", async ({ page }) => {
     await page.goto("/workshop");
     await page.locator("button[title='View Flat Cap']").click();

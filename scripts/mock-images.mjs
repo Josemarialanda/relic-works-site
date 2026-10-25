@@ -161,7 +161,6 @@ const WIDE = ["spacer-cap", "spacer-1-1-8in", "spacer-1in"];
 for (const slug of Object.keys(PRODUCT)) {
   // Wide collage tiles show only the middle half of the height, so the product stays inside it. The stems turn a little.
   const tile = doc(1200, 1200, P(slug, 600, 600, 860, 560, slug.includes("stem") ? -4 : 0));
-  out[`home/collage-${slug}.svg`] = tile;
   // These workshop tiles span two columns (2.7:1 on desktop, about square on a phone). A 2:1 image with the
   // product in its middle square fits both.
   out[`workshop/collage-${slug}.svg`] = WIDE.includes(slug) ? doc(1600, 800, P(slug, 800, 400, 680, 440)) : tile;

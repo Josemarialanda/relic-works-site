@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Collage } from "@/components/Collage";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { Photo } from "@/components/Photo";
 import { fromLabel } from "@/lib/catalog";
@@ -18,15 +16,6 @@ const CATEGORIES = [
   { name: "Stems", image: "/images/home/category-stems.jpg" },
   { name: "Spacers", image: "/images/home/category-spacers.jpg" },
   { name: "Caps", image: "/images/home/category-caps.jpg" },
-];
-
-const COLLAGE = [
-  { alt: "Quill Stem", src: "/images/home/collage-quill-stem.jpg", col: "span 2", row: "span 2" },
-  { alt: "Threadless Stem", src: "/images/home/collage-threadless-stem.jpg" },
-  { alt: "Flat Cap", src: "/images/home/collage-flat-cap.jpg" },
-  { alt: "Spacer Cap", src: "/images/home/collage-spacer-cap.jpg" },
-  { alt: `1 1/8" Spacer`, src: "/images/home/collage-spacer-1-1-8in.jpg" },
-  { alt: `1" Spacer`, src: "/images/home/collage-spacer-1in.jpg" },
 ];
 
 export default async function HomePage() {
@@ -57,23 +46,6 @@ export default async function HomePage() {
             </div>
           </a>
         ))}
-      </section>
-
-      <section className={cx(layout.split57, layout.ruleB)}>
-        <div className={cx(layout.stack, layout.ruleR, styles.story)}>
-          <div className={cx(layout.stack, layout.gap20)}>
-            <span className="meta-b">The workshop</span>
-            <h2 className="heading">A passion for riding and a workshop.</h2>
-            <p className={cx("body-copy", styles.storyBody)}>
-              That&apos;s how Relic started. Tough, high-quality stems, caps and custom bits for funky builds, built to last forever.
-            </p>
-          </div>
-          <Link className={cx(layout.between, layout.ruleT, styles.storyLink)} href="/workshop">
-            <span className="subheading">Visit the workshop</span>
-            <span className="meta">Our story</span>
-          </Link>
-        </div>
-        <Collage tiles={COLLAGE} columns={3} rowHeight={200} />
       </section>
     </main>
   );
