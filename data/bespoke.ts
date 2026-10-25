@@ -3,7 +3,7 @@
 // The price rules are PLACEHOLDERS: change them to the real prices before launch.
 
 import raw from "./bespoke.json";
-import { array, fail, number, numbersFor, object, oneOf, range, string, strings } from "./validate";
+import { fail, number, numbersFor, object, oneOf, range, string, strings } from "./validate";
 
 export type PartId = "stems" | "spacers" | "caps";
 

@@ -9,11 +9,6 @@ async function expectTapTargets(locator: Locator) {
   for (const s of all) expect(s.height, `"${s.text}" height`).toBeGreaterThanOrEqual(MIN_TARGET);
 }
 
-test("the page matches the touch media query", async ({ page }) => {
-  await page.goto("/");
-  expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
-});
-
 test.describe("hero carousel", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");

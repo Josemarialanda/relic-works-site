@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
 import { Photo } from "./Photo";
 import { Placeholder } from "./Placeholder";

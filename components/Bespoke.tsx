@@ -93,8 +93,7 @@ export function Bespoke() {
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   // The key of the part that was added last, so the message goes when the options change.
   const [addedKey, setAddedKey] = useState<string | null>(null);
-  // The look of the 3D stem. A custom size that is empty or wrong keeps the last good value. The photo shows
-  // when the browser has no WebGL.
+  // The look of the 3D part (stem, spacer or cap). The photo shows when the browser has no WebGL.
   const [stem, setStem] = useState<StemParams>(FIRST_STEM);
   const [noWebgl, setNoWebgl] = useState(false);
 

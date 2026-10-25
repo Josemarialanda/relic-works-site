@@ -88,7 +88,7 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 ### The 3D models
 
 The Stems tab shows a 3D stem (`components/StemModel.tsx`) that follows the options: type, material, bond, finish,
-steerer clamp height, length and angle. A custom size that is empty or wrong keeps the last good value. The colour of
+steerer clamp height, length and angle. The colour of
 each material (it does not change the shape) and the surface of each finish are in `lib/stem-model.ts`. A new value in
 `materials` or `finishes` needs a line in `lib/stem-model.ts`, or the 3D stem keeps its last look.
 

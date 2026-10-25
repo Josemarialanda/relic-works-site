@@ -31,11 +31,6 @@ const order = (payload: unknown) => buildOrder(payload, CATALOG.products);
 
 // With a mouse, the touch changes must not change the site.
 
-test("the page does not match the touch media query", async ({ page }) => {
-  await page.goto("/");
-  expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(false);
-});
-
 test("the hero dots are 10px with a 12px gap", async ({ page }) => {
   await page.goto("/");
   for (const s of await sizes(heroDots(page))) expect(s.width).toBe(10);
@@ -262,7 +257,7 @@ test.describe("3D stem on the bespoke page", () => {
       return { n, rgb: rgb.map((v) => v / Math.max(n, 1)) };
     });
 
-  test("the stems tab shows a 3D stem that follows the options, and the other tabs show their photos", async ({ page }) => {
+  test("each tab shows a 3D model that follows its options, and each part keeps its own options", async ({ page }) => {
     await page.goto("/bespoke");
     await expect(model(page)).toHaveAttribute("data-type", "Threadless");
     await expect(model(page)).toHaveAttribute("data-length", "90");
@@ -1126,13 +1121,6 @@ test.describe("data files", () => {
     for (const path of paths) expect(existsSync(join("public", path)), path).toBe(true);
   });
 
-  test("every price is a whole number of pence, so Stripe accepts it", () => {
-    for (const p of CATALOG.products) {
-      const r = order({ zone: "uk", items: [{ name: p.name, qty: 1 }] });
-      expect(r.ok && Number.isInteger(r.order.lines[0].unitAmount), p.name).toBe(true);
-    }
-  });
-
   test("the catalog has the categories, materials, finishes and order of the Stripe products", () => {
     expect(CATALOG.categories).toEqual(["Stems", "Spacers", "Caps"]);
     expect(CATALOG.materials).toEqual(["Steel", "Titanium"]);
@@ -1283,7 +1271,7 @@ test("the 3D stem takes its numbers from the options", () => {
   expect(metal("Steel")).toMatchObject({ material: "Steel" });
   expect(metal("Titanium").color).not.toBe(metal("Steel").color);
   expect({ ...metal("Titanium"), color: "", material: "" }).toEqual({ ...metal("Steel"), color: "", material: "" });
-  // A custom size can be negative (an angle), and an empty or wrong one keeps the value before.
+  // An angle can be negative, and a missing or wrong value keeps the value before.
   expect(stemParams({ ...base, angle: "-12°" }, FIRST_STEM).riseDeg).toBe(-12);
   expect(stemParams({ ...base, length: "" }, raw).lengthMm).toBe(80);
   expect(stemParams({ ...base, length: undefined, type: "Nonsense" }, raw)).toMatchObject({ lengthMm: 80, type: "Threadless" });

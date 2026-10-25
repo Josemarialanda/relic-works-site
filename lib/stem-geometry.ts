@@ -5,13 +5,13 @@
 
 // The sizes in mm. The body tube is 28.9 mm across, the steerer clamp is 38 mm across. JOINT_MARGIN is the room for
 // the joint above and below the line where the tubes meet.
-export const BODY_RADIUS_MM = 14.45;
-export const CLAMP_RADIUS_MM = 19;
+const BODY_RADIUS_MM = 14.45;
+const CLAMP_RADIUS_MM = 19;
 export const JOINT_MARGIN_MM = 2.5;
 
 // The height (top to bottom, in mm) of the line where a body of radius `body` meets a vertical tube of radius
 // `steerer`, when the body rises or drops by `angleDeg`.
-export function jointSpanMm(angleDeg: number, body = BODY_RADIUS_MM, steerer = CLAMP_RADIUS_MM): number {
+function jointSpanMm(angleDeg: number, body = BODY_RADIUS_MM, steerer = CLAMP_RADIUS_MM): number {
   const a = (Math.abs(angleDeg) * Math.PI) / 180;
   const cos = Math.cos(a);
   const sin = Math.sin(a);

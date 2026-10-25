@@ -7,7 +7,7 @@
 // The comments below are the author's, except where they say "Here:". They refer to Bencho's own project, not to
 // this one.
 
-import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import styles from "./GlassBubble.module.css";
 import { useStillness } from "@/lib/useStillness";
 

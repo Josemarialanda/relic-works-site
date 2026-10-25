@@ -27,7 +27,6 @@ const QUILL_EXTRA = 7;
 // The slanted cut of the quill and its wedge: the angle of the cut, and its height above the bottom.
 const CUT_TAN = Math.tan((50 * Math.PI) / 180);
 const CUT_UP = 2.2;
-const WEDGE_LOW = 1.2;
 // The handlebar clamp: a ring in two parts. The face part is at the front, between the two splits. The splits are
 // at the top and the bottom (±SPLIT_A from the front), on one vertical line, so that the bolts at the top are
 // straight above the bolts at the bottom and all four are parallel. Two bosses, each with one bolt, cross each split.
@@ -510,7 +509,6 @@ export function StemModel({ params, label, onFail }: Props) {
       const H = q ? now.height : Math.max(now.height, jointTop - jointLow + 2 * (spread + 0.06));
       const yTop = H / 2;
       const quillLen = H + QUILL_EXTRA;
-      const bodyR = BODY_R * k;
 
       // The parts whose shape follows the height.
       if (Math.abs(H - madeH) > 1e-4) {

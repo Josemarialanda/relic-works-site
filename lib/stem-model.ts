@@ -48,8 +48,8 @@ function numberIn(v: string | undefined): number | null {
   return m ? Number(m[1]) : null;
 }
 
-// The look for a draft of the order. A field that is empty or wrong (a custom size that the customer is still
-// typing) keeps its value from `before`, so the model does not jump while the customer types.
+// The look for a draft of the order. A field that is missing or wrong (for example the height of a flat cap, which
+// has none) keeps its value from `before`.
 export function stemParams(draft: Partial<BespokeConfig>, before: StemParams): StemParams {
   const finish = draft.finish && draft.finish in SURFACE ? draft.finish : before.finish;
   const material = draft.material && draft.material in METAL ? draft.material : before.material;
