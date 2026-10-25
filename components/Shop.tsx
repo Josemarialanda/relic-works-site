@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { addToBag, useBag } from "@/lib/bag";
-import { MAX_QTY, maxQty, type Product } from "@/lib/catalog";
+import { specOf, type Product } from "@/lib/catalog";
 import { useCatalog } from "@/lib/catalog-context";
 import { cx } from "@/lib/cx";
 import layout from "@/styles/layout.module.css";
+import { AddToBag } from "./AddToBag";
 import { ProductCard } from "./ProductCard";
 import styles from "./Shop.module.css";
 import button from "./ui/button.module.css";
@@ -26,18 +26,11 @@ function matches(p: Product, f: Filters, skip?: FilterKey): boolean {
   );
 }
 
-function specOf(p: Product): string {
-  return `${p.mat} · ${p.fin}`;
-}
-
 export function Shop() {
   const { categories: CATEGORIES, materials: MATERIALS, finishes: FINISHES, products: PRODUCTS } = useCatalog();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sort, setSort] = useState<Sort>("Featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const bag = useBag();
-  // The products that the customer tried to add after the bag had the most of them. The note shows for these.
-  const [tried, setTried] = useState<ReadonlySet<string>>(new Set());
 
   // The URL hash (for example #Stems) selects one category.
   useEffect(() => {
@@ -135,24 +128,8 @@ export function Shop() {
             <div className={styles.products}>
               {g.items.map((p) => (
                 <div key={p.name} className={cx(layout.stack, layout.gap12)}>
-                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} image={p.image} soldOut={p.stock === 0} />
-                  <button
-                    type="button"
-                    className={cx(button.button, button.small, button.block)}
-                    disabled={p.stock === 0}
-                    onClick={() => {
-                      const key = `${p.name}|${specOf(p)}`;
-                      if ((bag.find((i) => i.key === key)?.qty ?? 0) >= maxQty(p)) return setTried((s) => new Set(s).add(p.name));
-                      addToBag({ key, type: p.cat, name: p.name, spec: specOf(p), price: p.price, image: p.image }, maxQty(p));
-                    }}
-                  >
-                    {p.stock === 0 ? "Sold out" : "Add to bag"}
-                  </button>
-                  {tried.has(p.name) && (bag.find((i) => i.key === `${p.name}|${specOf(p)}`)?.qty ?? 0) >= maxQty(p) && (
-                    <span className="meta" role="status">
-                      {p.stock !== null && p.stock < MAX_QTY ? `Only ${p.stock} in stock. You have all of them in your bag.` : `You can order up to ${MAX_QTY} of one item.`}
-                    </span>
-                  )}
+                  <ProductCard name={p.name} price={`£${p.price}`} meta={specOf(p)} image={p.image} soldOut={p.stock === 0} href={`/shop/${p.slug}`} />
+                  <AddToBag product={p} />
                 </div>
               ))}
             </div>

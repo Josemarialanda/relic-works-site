@@ -83,11 +83,22 @@ export function Bag() {
           <div key={it.key} className={cx(styles.item, layout.ruleB)}>
             <div className={layout.ratio11}>
               {/* Items saved before the bag had images have no image. */}
-              {it.image ? <Photo src={it.image} alt={it.name} sizes="160px" pixelate /> : <Placeholder label={it.name} />}
+              {(() => {
+                const tile = it.image ? <Photo src={it.image} alt={it.name} sizes="160px" pixelate /> : <Placeholder label={it.name} />;
+                const slug = productOf(it)?.slug;
+                // A product links to its page. A bespoke part has no page.
+                return slug ? <Link className={styles.itemLink} href={`/shop/${slug}`}>{tile}</Link> : tile;
+              })()}
             </div>
             <div className={cx(layout.stack, layout.gap8)}>
               <span className="meta muted">{it.type}</span>
-              <span className={styles.itemName}>{it.name}</span>
+              {productOf(it) ? (
+                <Link className={styles.itemName} href={`/shop/${productOf(it)!.slug}`}>
+                  {it.name}
+                </Link>
+              ) : (
+                <span className={styles.itemName}>{it.name}</span>
+              )}
               <span className={cx("meta", styles.itemSpec)}>{it.spec}</span>
               <div className={styles.itemActions}>
                 <div className={styles.qty}>

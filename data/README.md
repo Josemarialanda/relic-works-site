@@ -35,6 +35,10 @@ A Stripe product is a shop product when it is **active**, it has a default **one
 | `stock` | Optional whole number: the items in stock. With no `stock`, the product has no limit. See "Stock" below. |
 
 - The product **name** must be different for each active product. A saved bag finds a product by its name.
+- Each product has a page at `/shop/<name in lower case, with a hyphen between the words>` (for example `/shop/flat-cap`).
+  The shop cards and the bag link to it. Two names that give the same address stop the build. A new name gives a
+  new address, so an old link to the product stops working: avoid a rename.
+- The **description** of the Stripe product shows on its page. With no description, the page shows only the facts.
 - The first **image** of the product is the shop image. Add it in the dashboard (Product → Images). Until it has an image, the shop shows a grey tile.
 - The home page and the hero use the categories `Stems`, `Spacers` and `Caps`.
 - A wrong product (for example no `category`) stops the build with a message that names the product.

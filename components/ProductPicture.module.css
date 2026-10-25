@@ -1,0 +1,23 @@
+/* The picture is as wide as its column and square, but it is never taller than the window below the navigation
+   (60px), so the whole picture and the button fit in the window. The photo is cropped at the sides when the box is
+   wider than it is tall. The box is positioned, so the photo can fill it. */
+.column { border-right: var(--rule); }
+.picture { position: relative; aspect-ratio: 1 / 1; max-height: calc(100vh - 60px); overflow: hidden; background: var(--color-bone); }
+
+/* The controls are in the top right corner: the zoom slider (only while the glass is on) to the left of the button. */
+.controls { position: absolute; top: var(--spacing-12); right: var(--spacing-12); z-index: 2; display: flex; align-items: center; gap: 8px; }
+.zoom { display: flex; align-items: center; height: 44px; border: var(--rule); background: var(--color-paper-white); }
+.controls .zoom > * { padding: 0 var(--spacing-12); }
+
+/* The glass canvas is 440/620 = 1.409 times the width of the box, in the middle of it. The margin is clipped. */
+.glass { position: absolute; left: 50%; top: 50%; width: 140.91%; transform: translate(-50%, -50%); }
+
+/* The magnifier button: a square, with a rule, as in the design of the site. It is 44px for a finger. */
+.toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: var(--rule); background: var(--color-paper-white); color: var(--color-ink-black); cursor: pointer; }
+.toggle.on { background: var(--color-ink-black); color: var(--color-paper-white); }
+.toggle:focus-visible { outline: 2px solid var(--color-ink-black); outline-offset: 2px; }
+
+/* Phone: the picture is on top, as wide as the window, with a rule under it. */
+@media (max-width: 767px) {
+  .column { border-right: none; border-bottom: var(--rule); }
+}

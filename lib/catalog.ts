@@ -13,6 +13,10 @@ export type Product = {
   id: string;
   priceId: string;
   name: string;
+  // The address of the product page: /shop/<slug>. It comes from the name, so it is different for each product.
+  slug: string;
+  // The description of the Stripe product, or null when it has none.
+  description: string | null;
   cat: Category;
   mat: Material;
   fin: Finish;
@@ -28,6 +32,14 @@ export type Catalog = { categories: Category[]; materials: Material[]; finishes:
 
 // The most of one product that an order can have: 20 or the stock, whichever is lower.
 export const maxQty = (product: Product) => Math.min(MAX_QTY, product.stock ?? MAX_QTY);
+
+// The name in lower case, with a hyphen between the words: "1 1/8\" Spacer" gives "1-1-8-spacer".
+export const slugify = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// The material and the finish, as the bag and the shop show them.
+export const specOf = (p: Product) => `${p.mat} · ${p.fin}`;
+
+export const productBySlug = (products: readonly Product[], slug: string) => products.find((p) => p.slug === slug);
 
 export const productByName = (products: readonly Product[], name: string) => products.find((p) => p.name === name);
 

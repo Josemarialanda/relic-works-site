@@ -4,7 +4,7 @@
 // A wrong product stops the build with a message that names the product, so a visitor never sees the error.
 
 import type Stripe from "stripe";
-import type { Catalog, Product } from "./catalog";
+import { slugify, type Catalog, type Product } from "./catalog";
 
 function fail(product: Stripe.Product, problem: string): never {
   throw new Error(`Stripe product "${product.name}" (${product.id}): ${problem}`);
@@ -35,6 +35,8 @@ export function parseStripeProducts(stripeProducts: Stripe.Product[]): Catalog {
         id: p.id,
         priceId: price.id,
         name: p.name.trim(),
+        slug: slugify(p.name),
+        description: p.description?.trim() || null,
         cat: meta(p, "category"),
         mat: meta(p, "material"),
         fin: meta(p, "finish"),
@@ -51,6 +53,11 @@ export function parseStripeProducts(stripeProducts: Stripe.Product[]): Catalog {
     if (products.findIndex((q) => q.name === p.name) !== i) {
       throw new Error(`Stripe product "${p.name}": more than one active product has this name. A saved bag finds a product by its name.`);
     }
+  });
+  products.forEach((p, i) => {
+    if (!p.slug) throw new Error(`Stripe product "${p.name}": the name has no letter or number, so it has no page address.`);
+    const other = products.find((q, j) => j < i && q.slug === p.slug);
+    if (other) throw new Error(`Stripe products "${other.name}" and "${p.name}" have the same page address (/shop/${p.slug}). Rename one.`);
   });
   return {
     categories: unique(products.map((p) => p.cat)),

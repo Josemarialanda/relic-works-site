@@ -9,6 +9,7 @@ import { parseZones } from "../data/shipping";
 import { buildOrder } from "../lib/checkout";
 import { parseStripeProducts } from "../lib/catalog-stripe";
 import { applySale } from "../lib/stock";
+import { slugify } from "../lib/catalog";
 import Stripe from "stripe";
 import { expectFooterAtBottom, heroDots, heroSlide, sizes } from "./helpers";
 
@@ -333,6 +334,83 @@ test("a bag image is hidden behind a pixel pattern while it loads, then it shows
   release();
   await expect(img).toHaveCSS("opacity", "1");
   await expect(page.locator("main canvas")).toHaveCount(0);
+});
+
+test.describe("product page", () => {
+  test("an address with no product shows the page not found", async ({ page }) => {
+    const res = await page.goto("/shop/no-such-product-in-stripe");
+    expect(res?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "Page not found." })).toBeVisible();
+  });
+
+  test("a product in the shop opens its page, which adds it to the bag, and the bag links back", async ({ page }) => {
+    await page.goto("/shop");
+    // The products come from Stripe and can change, so use the first product that the shop shows.
+    const card = page.locator("main a[href^='/shop/']").first();
+    test.skip((await card.count()) === 0, "the shop has no product");
+    const href = await card.getAttribute("href");
+    await card.click();
+    await page.waitForURL(`**${href}`);
+    const name = await page.getByRole("heading", { level: 1 }).innerText();
+    await expect(page).toHaveTitle(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    await expect(page.getByRole("link", { name: /^← Shop/ })).toBeVisible();
+
+    const add = page.getByRole("button", { name: /^(Add to bag|Sold out)$/ });
+    test.skip(await add.isDisabled(), "the first product is sold out");
+    await add.click();
+    await expect(page.getByRole("link", { name: /^Bag \(1\)$/i })).toBeVisible();
+
+    await page.goto("/bag");
+    await page.locator(`main a[href='${href}']`).last().click();
+    await page.waitForURL(`**${href}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+  });
+
+  test("the magnifier button turns the glass on and off", async ({ page }) => {
+    await page.goto("/shop");
+    const card = page.locator("main a[href^='/shop/']").first();
+    test.skip((await card.count()) === 0, "the shop has no product");
+    await card.click();
+    await page.waitForURL("**/shop/*");
+    // A product with no image has no magnifier button.
+    const on = page.getByRole("button", { name: "Turn on the magnifying glass" });
+    test.skip((await on.count()) === 0, "the first product has no image");
+
+    await expect(page.locator("main canvas")).toHaveCount(0);
+    const box = await on.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    // The glass picture comes from this site, so the browser lets WebGL read it. Wait for it before the click.
+    const sameSite = page.waitForResponse((r) => r.url().includes("/_next/image") && r.url().includes("w=1200"));
+    await on.click();
+    await expect(page.locator("main canvas")).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Turn off the magnifying glass" })).toHaveAttribute("aria-pressed", "true");
+    expect((await sameSite).status()).toBe(200);
+
+    // The zoom slider shows in the top right corner, to the left of the button, while the glass is on. It sets the zoom of the glass, 1x to 2x.
+    const zoom = page.getByRole("slider", { name: "Zoom of the magnifying glass" });
+    await expect(zoom).toBeVisible();
+    await expect(zoom).toHaveAttribute("aria-valuetext", "1.5×");
+    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "1.5");
+    await zoom.focus();
+    await page.keyboard.press("End");
+    await expect(zoom).toHaveAttribute("aria-valuetext", "2.0×");
+    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "2");
+    await page.keyboard.press("Home");
+    await expect(page.locator("main canvas")).toHaveAttribute("data-zoom", "1");
+
+    await page.getByRole("button", { name: "Turn off the magnifying glass" }).click();
+    await expect(page.locator("main canvas")).toHaveCount(0);
+    await expect(zoom).toHaveCount(0);
+    await on.click();
+    await expect(page.locator("main canvas")).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("main canvas")).toHaveCount(0);
+  });
+
+  test("a bespoke part in the bag has no link to a product page", async ({ page }) => {
+    await saveBag(page, DEMO_BAG);
+    await expect(page.locator("main a[href^='/shop/']")).toHaveCount(0);
+  });
 });
 
 test.describe("pixelated image on a 2x screen", () => {
@@ -894,6 +972,26 @@ test.describe("data files", () => {
     for (let i = 0; i < 40; i++) meta = { ...meta, ...applySale(meta, 1, `cs_test_order${String(i).padStart(10, "0")}`)! };
     expect(meta.stock_orders.split(",")).toHaveLength(30);
     expect(meta.stock_orders.length).toBeLessThan(500);
+  });
+
+  test("a product page address comes from the name, and two products cannot share one", () => {
+    expect(slugify('1 1/8" Spacer')).toBe("1-1-8-spacer");
+    expect(slugify("  Flat Cap! ")).toBe("flat-cap");
+    expect(CATALOG.products.map((p) => p.slug)).toEqual(["quill-stem", "threadless-stem", "1-spacer", "1-1-8-spacer", "flat-cap", "spacer-cap"]);
+    const list = fakeStripeProducts(productsJson);
+    list[1].name = "Quill-Stem";
+    expect(() => parseStripeProducts(list)).toThrow(/"Quill Stem" and "Quill-Stem" have the same page address \(\/shop\/quill-stem\)/);
+    list[1].name = "***";
+    expect(() => parseStripeProducts(list)).toThrow(/no letter or number/);
+  });
+
+  test("the description of a Stripe product is kept, and an empty one is null", () => {
+    const list = fakeStripeProducts(productsJson);
+    list[0].description = "  A quill stem.  ";
+    list[1].description = "   ";
+    const products = parseStripeProducts(list).products;
+    expect(products[0].description).toBe("A quill stem.");
+    expect(products[1].description).toBeNull();
   });
 
   test("a wrong delivery zone is refused", () => {
